@@ -1,6 +1,9 @@
 --Variable describing piece movement and shit
 
---Global variables to track piece type
+--Global variables to track piece color and type
+WHITE = 1
+BLACK = -1
+
 EMPTY = 0
 PAWN = 1
 KNIGHT = 2
@@ -51,4 +54,13 @@ initBoardState = {
     INVALID, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVALID,
     INVALID, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, INVALID,
     INVALID, ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK, INVALID,
+    INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
+    INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
+}
+
+initBoardData = {
+    ep = -1, --En Passant, is set to the index of the potential targeted square when a pawn is pushed forward 2 squares
+    castle = 15, --4 bits, from left to right, 8=wq, 4=wk, 2=bq, 1=bk
+    side = WHITE,
+    fiftyMoveCount = 0
 }
