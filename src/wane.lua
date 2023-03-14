@@ -5,22 +5,18 @@ Board = require 'board'
 
 Board:init()
 
---Core loop of the engine
--- while true do
---     local s = io.read()
+-- Core loop of the engine
+while true do
+    Board:genMoves()
 
---     local m = parseMove(s)
+    local s = io.read()
 
---     if (not Board:makeMove(m)) then
---         print("Illegal move.")
---     else
---         Board:print()
---     end
+    local m = parseMove(s)
 
--- end
+    if (not Board:makeMove(m)) then
+        print("Illegal move.")
+    else
+        Board:print()
+    end
 
-Board:print()
-
-Board:makeMove({from = 89, to = 79})
-
-Board:print()
+end

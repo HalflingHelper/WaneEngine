@@ -14,9 +14,10 @@ function moveEqual(m1, m2)
     return m1.flags == m2.flags and m1.from == m2.from and m1.to == m2.to
 end
 
---Parses a move in "from to noation" from the string and returns its index in the list of generated moves
---If the move is invalid, returns -1
+--Parses a move in "from to noation" from the string to a move table
 function parseMove(s)
+    return move(tonumber(s:sub(1, 3)), tonumber(s:sub(3)), 0)
+
     --For Algebraic Notation
         --Find a piece code
 
@@ -31,5 +32,5 @@ function parseMove(s)
 
 
 
-    return -1
+    --return -1
 end
