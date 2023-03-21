@@ -1,4 +1,4 @@
---Variable describing piece movement and shit
+--Variables describing piece movement and shit
 
 --Global variables to track piece color and type
 WHITE = 1
@@ -12,6 +12,10 @@ ROOK = 4
 QUEEN = 5
 KING = 6
 INVALID = 7
+
+--Bits for move flags
+CASTLE_BIT = 1
+CAPTURE_BIT = 2
 
 pieceCharCodes = {
     [EMPTY] = '.',
