@@ -1,3 +1,12 @@
+--[[
+    Wane - A chess engine
+
+    Author: Calvin Josenhans
+    Purpose: A chess engine, made as a beginner project to understand the basics of how they work.
+    Date: March 2023
+]]
+
+
 require 'util'
 require 'move'
 
@@ -9,9 +18,14 @@ Board:init()
 while true do
     Board:genMoves()
 
-    local s = io.read()
+    local m
 
-    local m = parseMove(s)
+    repeat 
+        local s = io.read()
+        local status, err = pcall(function() m = parseMove(s) end)
+
+        if (not status) then print(err) end
+    until (status == true)
 
     if (not Board:makeMove(m)) then
         print("Illegal move.")
