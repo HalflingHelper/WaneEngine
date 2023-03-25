@@ -1,14 +1,16 @@
---The core board representation, using a 10x12 board, movegen implementation based on TSCP engine
+--The core board representation, using a 10x12 board, and partially inspired by TSCP engine
 require 'util'
 require 'data'
 require 'move'
 
+-- The Main Board Class
 local Board = {
     --Fields in Board
-    board = {}, data = {}, moveList = {},
-
+    board = {},
+    data = {},
+    moveList = {},
     --Sets the board and flags in their initial states
-    init = function (self)
+    init = function(self)
         -- Pieces
         local b = {}
         for i, v in ipairs(initBoardState) do
@@ -22,6 +24,14 @@ local Board = {
         self.moveList = {}
 
         self.board = b
+    end,
+
+    --[[
+        Returns true if square is a valid target for pawn captures
+    ]]
+    checkPawnCaps = function(self, square)
+        return self.board[square] ~= INVALID and self.board[square] ~= EMPTY and signum(self.board[square]) ~= self.data.side 
+            or self.data.ep == square
     end,
 
     --Generates all available moves in the position for the current color
@@ -44,27 +54,21 @@ local Board = {
                         if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
                             --Push two squares if the square is free
                             if self.board[to - pawnDist * self.data.side] == EMPTY then
-                                --Need to set the en passant flag
                                 list[#list + 1] = move(i, to - pawnDist * self.data.side, 0)
                             end
                         end
                     end
 
-                    -- Check Captures: TODO: Repeated code, should be in a method
-                    if self.board[to + 1] ~= INVALID and self.board[to + 1] ~= EMPTY and signum(self.board[to + 1]) ~= self.data.side then
-                        list[#list + 1] = move(i, to + 1, 0)
-                    end
-                    
-                    if self.board[to - 1] ~= INVALID and self.board[to - 1] ~= EMPTY and signum(self.board[to - 1]) ~= self.data.side then
-                        list[#list + 1] = move(i, to - 1, 0)
-                    end
+                    -- Check Captures in both directions
+                    if self.checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1, CAPTURE_BIT) end
+                    if self.checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1, CAPTURE_BIT) end
 
                 elseif pieceID == KING then
                     -- Castling moves and king moves
                     for j, dir in ipairs(offset[pieceID]) do
                         --Normal King moves
                         if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
-                            list[#list+1] = move(i, i + dir, 0)
+                            list[#list + 1] = move(i, i + dir, 0)
                         end
                     end
 
@@ -74,18 +78,17 @@ local Board = {
 
                     if c & 2 then
                         -- Check and add QC move
-                        if self.board[i-3] == EMPTY and self.board[i-2] == EMPTY and self.board[i-1] == EMPTY then
-                            list[#list+1] = move(i, i - 2, CASTLE_BIT)
+                        if self.board[i - 3] == EMPTY and self.board[i - 2] == EMPTY and self.board[i - 1] == EMPTY then
+                            list[#list + 1] = move(i, i - 2, CASTLE_BIT)
                         end
                     end
 
                     if c & 1 then
                         -- Check and add KC move
-                        if self.board[i+2] == EMPTY and self.board[i+1] == EMPTY then
-                            list[#list+1] = move(i, i + 2, CASTLE_BIT)
+                        if self.board[i + 2] == EMPTY and self.board[i + 1] == EMPTY then
+                            list[#list + 1] = move(i, i + 2, CASTLE_BIT)
                         end
                     end
-
                 else
                     -- All other piece moves
                     if slide[pieceID] then
@@ -94,16 +97,16 @@ local Board = {
                             for dist = 1, 8 do
                                 local to = i + dist * dir
                                 if self.board[to] == EMPTY then
-                                    list[#list+1] = move(i, to, 0)
+                                    list[#list + 1] = move(i, to, 0)
                                 elseif self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
                                     -- We run into an allied piece or the edge of the board
                                     break
                                 else
                                     -- We're capturing a piece and there aren't any more moves
-                                    list[#list+1] = move(i, to, CAPTURE_BIT)
+                                    list[#list + 1] = move(i, to, CAPTURE_BIT)
                                     break
                                 end
-                            end              
+                            end
                         end
                     else
                         --Horses
@@ -111,12 +114,12 @@ local Board = {
                             if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
                                 local moveFlags = signum(self.board[i + dir]) == -1 * self.data.side and CAPTURE_BIT or 0
 
-                                list[#list+1] = move(i, i + dir, moveFlags)
+                                list[#list + 1] = move(i, i + dir, moveFlags)
                             end
                         end
                     end
                 end
-            end            
+            end
         end
 
         self.moveList = list
@@ -127,14 +130,13 @@ local Board = {
         print(#list)
         --]]
     end,
-
     --Makes the listed move on the board
     --Returns true if the move is successful, false if there was a problem
     makeMove = function(self, move)
         --Make sure that move exists in the move list
         for i, v in ipairs(self.moveList) do
             if moveEqual(v, move) then
-                local pieceType = math.abs(self.board[move.from]) 
+                local pieceType = math.abs(self.board[move.from])
                 local pieceColor = signum(self.board[move.from])
 
                 -- Make the move
@@ -142,14 +144,15 @@ local Board = {
                 self.board[move.to] = self.board[move.from]
                 self.board[move.from] = EMPTY
 
-                if pieceType == KING and move.flags & CASTLE_BIT then
+                -- Castling checks
+                if pieceType == KING and move.flags == CASTLE_BIT then
                     if move.to > move.from then
                         --We want the KS rook
-                        self.board[move.to - 1] = self.board[move.to+1]
+                        self.board[move.to - 1] = self.board[move.to + 1]
                         self.board[move.to + 1] = EMPTY
                     else
                         --We want the QS rook
-                        self.board[move.to + 1] = self.board[move.to-2]
+                        self.board[move.to + 1] = self.board[move.to - 2]
                         self.board[move.to - 2] = EMPTY
                     end
                 end
@@ -171,11 +174,23 @@ local Board = {
                     end
                 end
 
+                -- Remove the piece if the move was an EP capture'
+                if pieceType == PAWN and move.to == self.data.ep then
+                    self.board[move.to + 10 * signum(move.from - move.to)] = EMPTY
+                end
 
-                --Update EP flags
+                -- En Passant Checks
+                --Update EP flags if the move is a double pawn push
+                if pieceType == PAWN and math.abs(move.to - move.from) == 20 then
+                    --Set the en passant flag to the targeted square
+                    self.data.ep = move.to + 10 * signum(move.from - move.to)
+                else
+                    -- Reset the en passant flag
+                    self.data.ep = -1
+                end
 
                 --Update 50 move counter
-                if pieceType == PAWN or move.flags & CAPTURE_BIT then
+                if pieceType == PAWN or move.flags == CAPTURE_BIT then
                     self.data.fiftyMoveRule = 0
                 end
 
@@ -187,7 +202,6 @@ local Board = {
         -- Return false if the move doesn't match
         return false
     end,
-
     print = function(self)
         io.write('\n8  ')
 
@@ -195,7 +209,7 @@ local Board = {
             if v ~= INVALID then
                 io.write(' ', pieceCharCodes[v])
                 if i % 10 == 9 and i ~= 99 then
-                    io.write('\n', 10 - math.ceil(i/10), '  ')
+                    io.write('\n', 10 - math.ceil(i / 10), '  ')
                 end
             end
         end

@@ -16,6 +16,7 @@ INVALID = 7
 --Bits for move flags
 CASTLE_BIT = 1
 CAPTURE_BIT = 2
+EP_BIT = 4 --
 
 pieceCharCodes = {
     [EMPTY] = '.',
