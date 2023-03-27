@@ -130,8 +130,15 @@ local Board = {
         print(#list)
         --]]
     end,
+
+    -- Scans the board to see if the current side's king is in check in the current position.
+    -- Used for determining the legality of moves.
+    inCheck = function(self)
+
+    end,
+
     --Makes the listed move on the board
-    --Returns true if the move is successful, false if there was a problem
+    --If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true. 
     makeMove = function(self, move)
         --Make sure that move exists in the move list
         for i, v in ipairs(self.moveList) do
