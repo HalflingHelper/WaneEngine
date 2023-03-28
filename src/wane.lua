@@ -32,5 +32,4 @@ while true do
     else
         Board:print()
     end
-
 end
