@@ -25,16 +25,14 @@ local Board = {
 
         self.board = b
     end,
-
     --[[
         Returns true if square is a valid target for pawn captures
-    ]]--
+    ]] --
     checkPawnCaps = function(self, square)
         return self.board[square] ~= INVALID and self.board[square] ~= EMPTY and
             signum(self.board[square]) ~= self.data.side
             or self.data.ep == square
     end,
-
     --Generates all available pseudo legal moves in the position for the current color
     genMoves = function(self)
         local list = {}
@@ -126,28 +124,79 @@ local Board = {
 
         self.moveList = list
     end,
-
     --[[
         TODO:
         Returns true if the square at said sqIndex is attacked by pieces of the opposite color
     ]]
-    isAttacked = function(self, sqIndex)
+    isAttacked = function(self, idx)
         --Look for knights
-        --Look for sliding pieces
-        --Look for pawns
-    end,
+        for i, dir in ipairs(offset[KNIGHT]) do
+            if math.abs(self.board[idx + dir]) == KNIGHT and signum(self.board[idx + dir]) ~= self.side then
+                return true
+            end
+        end
+        --Look for sliding pieces (rook, bishop, queen)
+        for i, dir in ipairs(offset[BISHOP]) do
+            for dist = 1, 8 do
+                local to = i + dist * dir
+                if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
+                    -- We run into an allied piece or the edge of the board
+                    break
+                end
 
+                local pieceType = math.abs(self.board[to])
+                if pieceType == BISHOP or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
+                    return true
+                end
+            end
+        end
+
+        for i, dir in ipairs(offset[ROOK]) do
+            for dist = 1, 8 do
+                local to = i + dist * dir
+                if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
+                    -- We run into an allied piece or the edge of the board
+                    break
+                end
+
+                local pieceType = math.abs(self.board[to])
+                if pieceType == ROOK or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
+                    return true
+                end
+            end
+        end
+        -- Look for pawns, going in the opposite direct of self.side
+        local candidate
+        -- Pawns to the left
+        candidate = self.board[idx - 11 * self.data.side]
+        if signum(candidate) ~= self.data.side and math.abs(candidate) == PAWN then
+            return true
+        end
+        -- Pawns to the right
+        candidate = self.board[idx - 9 * self.data.side]
+        if signum(candidate) ~= self.data.side and math.abs(candidate) == PAWN then
+            return true
+        end
+        -- We didn't find anything
+        return false
+    end,
     --[[
-        TODO:
         Scans the board to see if the current side's king is in check in the current position.
         Used for determining the legality of moves.
     ]]
     inCheck = function(self)
         -- Find the king
-        -- Returns true if the square the king is on is attacked
+        for i, square in ipairs(self.board) do
+            if math.abs(square) == KING and signum(square) == self.data.side then
+                -- Returns true if the square the king is on is attacked
+                return self:isAttacked(i)
+            end
+        end
+        -- Unreachable
+        return false
     end,
-
     --[[
+        TODO: Add stuff for making sure a move isn't illegal because of checks
         Makes the listed move on the board
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
     ]]
@@ -185,8 +234,8 @@ local Board = {
             --TODO: Need to be careful here
             if pieceType == KING then
                 if pieceColor == BLACK then
-                   self.data.castle.bq = false
-                   self.data.castle.bk = false
+                    self.data.castle.bq = false
+                    self.data.castle.bk = false
                 else
                     self.data.castle.wq = false
                     self.data.castle.wk = false
@@ -229,10 +278,10 @@ local Board = {
 
             return true
         end
-        
+
         -- Return false if the move isn't in the move list
         do return false end
- 
+
         ::continue::
     end,
     print = function(self)

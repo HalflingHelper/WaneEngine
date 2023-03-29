@@ -7,6 +7,8 @@
 ]]
 
 
+--TODO: ???? Change board representation to a piece array and a color array to reduce overhead of math.abs / signum functions
+
 require 'util'
 require 'move'
 
