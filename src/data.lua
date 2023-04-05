@@ -69,4 +69,5 @@ initBoardData = {
     castle         = {wq = true, wk = true, bq = true, bk = true},
     side           = WHITE, -- White goes first
     fiftyMoveCount = 0,
+    fullMoves = 1
 }

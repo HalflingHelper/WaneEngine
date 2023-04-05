@@ -8,16 +8,22 @@
     Expected output: https://www.chessprogramming.org/Perft_Results
 ]]
 
-function perft(depth)
-    if depth == 0 then return 0 end
+function perft(board, depth)
+    if depth == 0 then return 1 end
 
     local nodes = 0
 
-    --moves = genLegalMoves()
-    -- for every move in moves
-        -- make the move
-        -- nodes += perft(depth - 1)
-        -- undo the move
+    local moves = board:genMoves()
+
+    for i, move in ipairs(board.moveList) do
+        local preMove = board:toFEN()
+
+        if board:makeMove(move) then
+            nodes = nodes + perft(board, depth - 1)
+            -- undo the move
+            board:fromFEN(preMove)
+        end
+    end
 
     return nodes
 end

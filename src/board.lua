@@ -60,8 +60,8 @@ local Board = {
                 end
 
                 -- Check Captures in both directions
-                if self.checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1, CAPTURE_FLAG) end
-                if self.checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1, CAPTURE_FLAG) end
+                if self:checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1, CAPTURE_FLAG) end
+                if self:checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1, CAPTURE_FLAG) end
             elseif pieceID == KING then
                 -- Castling moves and king moves
                 for j, dir in ipairs(offset[pieceID]) do
@@ -275,6 +275,8 @@ local Board = {
             end
 
             self.data.fiftyMoveRule = self.data.fiftyMoveRule + 1
+            -- If current side is white black just moved
+            if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
             return true
         end
@@ -284,6 +286,75 @@ local Board = {
 
         ::continue::
     end,
+    -- Returns the FEN string representation of the board
+    -- I am aware that this isn't the best way to do this sort of thing but oh well
+    -- TODO: En Passant!
+    toFEN = function(self)
+        local fen = ""
+
+        --Pieces
+        local numEmpty = 0
+        local sq = 0
+        for i, v in ipairs(self.board) do
+            if v ~= INVALID then
+                if v == EMPTY then
+                    numEmpty = numEmpty + 1
+                else
+                    if numEmpty ~= 0 then 
+                        fen = fen .. numEmpty 
+                        numEmpty = 0
+                    end
+                    fen = fen .. pieceCharCodes[v]
+                end
+                sq = sq + 1
+                if sq % 8 == 0 then
+                    if numEmpty ~= 0 then 
+                        fen = fen .. numEmpty 
+                        numEmpty = 0
+                    end
+                    if sq ~= 64 then
+                        fen = fen .. "/"
+                    end
+                end
+            end
+        end
+        --Other information
+        
+        --Active color
+        if self.data.side == WHITE then
+            fen = fen .. " w "
+        else 
+            fen = fen .. " b "
+        end
+        --Castle rights
+        if self.data.castle.wk then fen = fen .. "K" end
+        if self.data.castle.wq then fen = fen .. "Q" end
+        if self.data.castle.bk then fen = fen .. "k" end
+        if self.data.castle.bq then fen = fen .. "q" end
+
+        --En passant target
+        if self.data.ep ~= -1 then
+            
+        else
+            fen = fen .. " - "
+        end
+
+        --Half Move Clock
+        fen = fen .. self.data.fiftyMoveCount
+
+        --Full Moves
+        fen = fen .. " " .. self.data.fullMoves
+
+        return fen
+    end,
+
+    --Sets board to the same state as the given fen string
+    fromFEN = function(self, fen)
+
+
+    end,
+
+
     print = function(self)
         io.write('\n8  ')
 

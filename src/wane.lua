@@ -11,10 +11,14 @@
 
 require 'util'
 require 'move'
+require 'test'
 
 Board = require 'board'
 
 Board:init()
+
+print(Board:toFEN())
+print(perft(Board, 1))
 
 -- Core loop of the engine
 while true do
