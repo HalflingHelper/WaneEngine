@@ -35,15 +35,32 @@ pieceCharCodes = {
     [KING] = 'K',
 }
 
-slide = {false, false, true, true, true, false} --Do the pieces move multiple spaces or not
+--Literally just the reverse of the above array to make FEN conversion easier :/
+charCodesToPiece = {
+    ['.'] = EMPTY,
+    ['p'] = -PAWN,
+    ['n'] = -KNIGHT,
+    ['b'] = -BISHOP,
+    ['r'] = -ROOK,
+    ['q'] = -QUEEN,
+    ['k'] = -KING,
+    ['P'] = PAWN,
+    ['N'] = KNIGHT,
+    ['B'] = BISHOP,
+    ['R'] = ROOK,
+    ['Q'] = QUEEN,
+    ['K'] = KING,
+}
+
+slide = { false, false, true, true, true, false } --Do the pieces move multiple spaces or not
 
 offset = {
-    {}, --PAWN - Nothing because it is special
-    {-21, -19, -12, -8, 8, 12, 19, 21}, --KNIGHT 
-    {-11, -9, 9, 11}, --BISHOP
-    {-10, -1, 1, 10}, --ROOK
-    {-11, -10, -9, -1, 1, 9, 10, 11}, --QUEEN
-    {-11, -10, -9, -1, 1, 9, 10, 11}, --KING
+    {},                                 --PAWN - Nothing because it is special
+    { -21, -19, -12, -8, 8, 12, 19, 21 }, --KNIGHT
+    { -11, -9,  9,   11 },              --BISHOP
+    { -10, -1,  1,   10 },              --ROOK
+    { -11, -10, -9,  -1, 1, 9,  10, 11 }, --QUEEN
+    { -11, -10, -9,  -1, 1, 9,  10, 11 }, --KING
 }
 
 
@@ -52,22 +69,22 @@ offset = {
 initBoardState = {
     INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
     INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
-    INVALID,   -ROOK, -KNIGHT, -BISHOP,  -QUEEN,   -KING, -BISHOP, -KNIGHT,   -ROOK, INVALID,
-    INVALID,   -PAWN,   -PAWN,   -PAWN,   -PAWN,   -PAWN,   -PAWN,   -PAWN,   -PAWN, INVALID,
-    INVALID,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY, INVALID,
-    INVALID,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY, INVALID,
-    INVALID,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY, INVALID,
-    INVALID,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY,   EMPTY, INVALID,
-    INVALID,    PAWN,    PAWN,    PAWN,    PAWN,    PAWN,    PAWN,    PAWN,    PAWN, INVALID,
-    INVALID,    ROOK,  KNIGHT,  BISHOP,   QUEEN,    KING,  BISHOP,  KNIGHT,    ROOK, INVALID,
+    INVALID, -ROOK, -KNIGHT, -BISHOP, -QUEEN, -KING, -BISHOP, -KNIGHT, -ROOK, INVALID,
+    INVALID, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, -PAWN, INVALID,
+    INVALID, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVALID,
+    INVALID, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVALID,
+    INVALID, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVALID,
+    INVALID, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, INVALID,
+    INVALID, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, PAWN, INVALID,
+    INVALID, ROOK, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, ROOK, INVALID,
     INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
     INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID, INVALID,
 }
 
 initBoardData = {
     ep             = -1,    -- En Passant is set to the index of the potential targeted square
-    castle         = {wq = true, wk = true, bq = true, bk = true},
+    castle         = { wq = true, wk = true, bq = true, bk = true },
     side           = WHITE, -- White goes first
     fiftyMoveCount = 0,
-    fullMoves = 1
+    fullMoves      = 1
 }

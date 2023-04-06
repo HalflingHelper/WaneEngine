@@ -300,16 +300,16 @@ local Board = {
                 if v == EMPTY then
                     numEmpty = numEmpty + 1
                 else
-                    if numEmpty ~= 0 then 
-                        fen = fen .. numEmpty 
+                    if numEmpty ~= 0 then
+                        fen = fen .. numEmpty
                         numEmpty = 0
                     end
                     fen = fen .. pieceCharCodes[v]
                 end
                 sq = sq + 1
                 if sq % 8 == 0 then
-                    if numEmpty ~= 0 then 
-                        fen = fen .. numEmpty 
+                    if numEmpty ~= 0 then
+                        fen = fen .. numEmpty
                         numEmpty = 0
                     end
                     if sq ~= 64 then
@@ -319,11 +319,11 @@ local Board = {
             end
         end
         --Other information
-        
+
         --Active color
         if self.data.side == WHITE then
             fen = fen .. " w "
-        else 
+        else
             fen = fen .. " b "
         end
         --Castle rights
@@ -334,7 +334,7 @@ local Board = {
 
         --En passant target
         if self.data.ep ~= -1 then
-            
+
         else
             fen = fen .. " - "
         end
@@ -347,14 +347,39 @@ local Board = {
 
         return fen
     end,
-
     --Sets board to the same state as the given fen string
     fromFEN = function(self, fen)
+        local stage = 0
+        local sqIndex = 22
+        for c in fen:gmatch(".") do
+            if c == " " then
+                stage = stage + 1
+                goto continue
+            end
 
+            if stage == 0 then
+                if tonumber(c) then
+                    --Empty squares
+                    for sq = sqIndex, sqIndex + tonumber(c) do
+                        self.board[sq] = EMPTY
+                    end
+                    sqIndex = sqIndex + tonumber(c)
+                elseif c == "/" then
+                    sqIndex = sqIndex + 2
+                else
+                    self.board[sqIndex] = charCodesToPiece[c]
+                    sqIndex = sqIndex + 1
+                end
 
+                
+            elseif stage == 1 then
+                --Piece colors
+                print(c)
+                self.side = c == "w" and WHITE or BLACK
+            end
+            ::continue::
+        end
     end,
-
-
     print = function(self)
         io.write('\n8  ')
 

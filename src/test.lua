@@ -17,6 +17,7 @@ function perft(board, depth)
 
     for i, move in ipairs(board.moveList) do
         local preMove = board:toFEN()
+        print(preMove)
 
         if board:makeMove(move) then
             nodes = nodes + perft(board, depth - 1)
