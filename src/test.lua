@@ -2,6 +2,7 @@
 
 --[[
     A Perft function for testing purposes
+    Taking back moves in this implementation is terribly inneficient
     Walks the move generation tree to depth depth, and counts the number of strictly legal moves
 
     Implementation : https://www.chessprogramming.org/Perft
@@ -17,6 +18,7 @@ function perft(board, depth)
 
     for i, move in ipairs(board.moveList) do
         local preMove = board:toFEN()
+
         print(preMove)
 
         if board:makeMove(move) then

@@ -131,14 +131,14 @@ local Board = {
     isAttacked = function(self, idx)
         --Look for knights
         for i, dir in ipairs(offset[KNIGHT]) do
-            if math.abs(self.board[idx + dir]) == KNIGHT and signum(self.board[idx + dir]) ~= self.side then
+            if math.abs(self.board[idx + dir]) == KNIGHT and signum(self.board[idx + dir]) ~= self.data.side then
                 return true
             end
         end
         --Look for sliding pieces (rook, bishop, queen)
         for i, dir in ipairs(offset[BISHOP]) do
             for dist = 1, 8 do
-                local to = i + dist * dir
+                local to = idx + dist * dir
                 if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
                     -- We run into an allied piece or the edge of the board
                     break
@@ -153,7 +153,7 @@ local Board = {
 
         for i, dir in ipairs(offset[ROOK]) do
             for dist = 1, 8 do
-                local to = i + dist * dir
+                local to = idx + dist * dir
                 if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
                     -- We run into an allied piece or the edge of the board
                     break
@@ -209,14 +209,20 @@ local Board = {
             local pieceColor = signum(self.board[move.from])
 
             -- Make the move on the board
-            self.data.side = -1 * self.data.side
             self.board[move.to] = self.board[move.from]
             self.board[move.from] = EMPTY
 
-            --Check that the king isn't directly in check
+            --Check that the king isn't directly in check, otherwise undo the move and return false
+            if self:inCheck() then
+                self.board[move.from] = self.board[move.to]
+                self.board[move.to] = EMPTY
+                return false
+            end
+
+            self.data.side = -1 * self.data.side
 
             -- Castling checks
-            if pieceType == KING and move.flags == CASTLE_FLAG then
+            if pieceType == KING and math.abs(move.from - move.to) >= 2 then
                 --TODO: Check squares in between
 
                 if move.to > move.from then
@@ -278,13 +284,14 @@ local Board = {
             -- If current side is white black just moved
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
-            return true
+            printMove(move)
+            do return true end
+
+            ::continue::
         end
 
         -- Return false if the move isn't in the move list
-        do return false end
-
-        ::continue::
+        return false
     end,
     -- Returns the FEN string representation of the board
     -- I am aware that this isn't the best way to do this sort of thing but oh well
@@ -334,7 +341,7 @@ local Board = {
 
         --En passant target
         if self.data.ep ~= -1 then
-
+            fen = fen .. " " .. sqToCoords(self.data.ep) .. " "
         else
             fen = fen .. " - "
         end
@@ -360,7 +367,7 @@ local Board = {
             if stage == 0 then
                 if tonumber(c) then
                     --Empty squares
-                    for sq = sqIndex, sqIndex + tonumber(c) do
+                    for sq = sqIndex, sqIndex + tonumber(c) - 1 do
                         self.board[sq] = EMPTY
                     end
                     sqIndex = sqIndex + tonumber(c)
@@ -374,12 +381,12 @@ local Board = {
                 
             elseif stage == 1 then
                 --Piece colors
-                print(c)
-                self.side = c == "w" and WHITE or BLACK
+                self.data.side = c == "w" and WHITE or BLACK
             end
             ::continue::
         end
     end,
+
     print = function(self)
         io.write('\n8  ')
 

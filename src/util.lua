@@ -11,3 +11,7 @@ end
 function getFile(n)
     return n % 10 - 1
 end
+
+function sqToCoords(n)
+    return string.char(getFile(n) + 96) .. getRank(n)
+end

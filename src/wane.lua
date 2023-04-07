@@ -17,8 +17,8 @@ Board = require 'board'
 
 Board:init()
 
-print(Board:toFEN())
-print(perft(Board, 1))
+
+print(perft(Board, 2))
 
 -- Core loop of the engine
 while true do

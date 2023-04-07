@@ -52,3 +52,8 @@ function parseMove(s)
 
     -- return move(tonumber(s:sub(1, 3)), tonumber(s:sub(3)), 0)
 end
+
+function printMove(move)
+    print("from: " .. move.from .. ", to: " .. move.to)
+
+end
