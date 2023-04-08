@@ -24,7 +24,7 @@ end
 
 -- Parses a move in Long Algebraic notaion from the string to a move table
 -- Expects two squares in algebraic notation
--- ex: e2 e4
+-- ex: e2e4
 function parseMove(s)
     if #s < 4 then
         error("Please enter a move in the form '<from-square> <to-square>'", 0)
