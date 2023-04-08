@@ -27,14 +27,14 @@ local Board = {
     end,
     --[[
         Returns true if square is a valid target for pawn captures
-    ]] --
+    ]]
     checkPawnCaps = function(self, square)
         return self.board[square] ~= INVALID and self.board[square] ~= EMPTY and
             signum(self.board[square]) ~= self.data.side
             or self.data.ep == square
     end,
-    --Generates all available pseudo legal moves in the position for the current color
-    --Returns a move list for testing 
+    --Generates all available pseudo-legal moves in the position for the current color
+    --Returns a move list for testing
     genMoves = function(self)
         local list = {}
         --Iterate over every square on the board
@@ -145,8 +145,13 @@ local Board = {
                 end
 
                 local pieceType = math.abs(self.board[to])
-                if pieceType == BISHOP or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
-                    return true
+
+                if pieceType ~= EMPTY then
+                    if pieceType == BISHOP or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
+                        return true
+                    else
+                        break
+                    end
                 end
             end
         end
@@ -160,8 +165,13 @@ local Board = {
                 end
 
                 local pieceType = math.abs(self.board[to])
-                if pieceType == ROOK or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
-                    return true
+
+                if pieceType ~= EMPTY then
+                    if pieceType == ROOK or pieceType == QUEEN or (dist == 1 and pieceType == KING) then
+                        return true
+                    else
+                        break
+                    end
                 end
             end
         end
@@ -209,6 +219,8 @@ local Board = {
             local pieceColor = signum(self.board[move.from])
 
             -- Make the move on the board
+
+            --TODO: Removing pawns for EP captures, replacing captured pieces when it's a check
             local isCapture = self.board[move.to] ~= EMPTY
             self.board[move.to] = self.board[move.from]
             self.board[move.from] = EMPTY
@@ -220,17 +232,25 @@ local Board = {
                 return false
             end
 
-            self.data.side = -1 * self.data.side
-
             -- Castling checks
-            if pieceType == KING and math.abs(move.from - move.to) >= 2 then
-                --TODO: Check squares in between
-
+            if pieceType == KING and math.abs(move.from - move.to) == 2 then
                 if move.to > move.from then
+                    --Make sure the king didn't move through check
+                    if self:isAttacked(move.to - 1) then
+                        self.board[move.from] = self.board[move.to]
+                        self.board[move.to] = EMPTY
+                        return false
+                    end
                     --We want the KS rook
                     self.board[move.to - 1] = self.board[move.to + 1]
                     self.board[move.to + 1] = EMPTY
                 else
+                    --Make sure king didn't castle through check
+                    if self:isAttacked(move.to + 1) then
+                        self.board[move.from] = self.board[move.to]
+                        self.board[move.to] = EMPTY
+                        return false
+                    end
                     --We want the QS rook
                     self.board[move.to + 1] = self.board[move.to - 2]
                     self.board[move.to - 2] = EMPTY
@@ -238,7 +258,6 @@ local Board = {
             end
 
             --Update castle flags
-            --TODO: Need to be careful here
             if pieceType == KING then
                 if pieceColor == BLACK then
                     self.data.castle.bq = false
@@ -283,6 +302,8 @@ local Board = {
 
             self.data.fiftyMoveRule = self.data.fiftyMoveRule + 1
             -- If current side is white black just moved
+            self.data.side = -1 * self.data.side
+
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
             do return true end
@@ -295,7 +316,6 @@ local Board = {
     end,
     -- Returns the FEN string representation of the board
     -- I am aware that this isn't the best way to do this sort of thing but oh well
-    -- TODO: En Passant!
     toFEN = function(self)
         local fen = ""
 
@@ -329,11 +349,15 @@ local Board = {
 
         --Active color
         if self.data.side == WHITE then
-            fen = fen .. " w "
+            fen = fen .. " w"
         else
-            fen = fen .. " b "
+            fen = fen .. " b"
         end
         --Castle rights
+        if self.data.castle.wk or self.data.castle.wq or self.data.castle.bk or self.data.castle.bq then
+            fen = fen .. " "
+        end
+
         if self.data.castle.wk then fen = fen .. "K" end
         if self.data.castle.wq then fen = fen .. "Q" end
         if self.data.castle.bk then fen = fen .. "k" end
@@ -355,17 +379,26 @@ local Board = {
         return fen
     end,
     --Sets board to the same state as the given fen string
-    --TODO: Half Move Clock and Full Move Count
+    --TODO: Half Move Clock and Full Move Count, currently just count up from where they are
     fromFEN = function(self, fen)
-        self.data.castle = {wk=false, wq=false, bk=false, bq=false}
+        self.data.castle = { wk = false, wq = false, bk = false, bq = false }
         self.data.ep = 0
+        self.data.fiftyMoveRule = 0
 
         local stage = 0
         local sqIndex = 22
         for c in fen:gmatch(".") do
             if c == " " then
                 stage = stage + 1
+
                 goto continue
+            end
+
+            if stage == 2 then
+                --Since castling can be completely omitted, we need to check if there is castling, otherwise
+                if not (c == "K" or c == "Q" or c == "q" or c == "k") then
+                    stage = 3
+                end
             end
 
             if stage == 0 then
@@ -381,8 +414,6 @@ local Board = {
                     self.board[sqIndex] = charCodesToPiece[c]
                     sqIndex = sqIndex + 1
                 end
-
-                
             elseif stage == 1 then
                 --Piece colors
                 self.data.side = c == "w" and WHITE or BLACK
@@ -393,18 +424,17 @@ local Board = {
                 if c == "k" then self.data.castle.bk = true end
                 if c == "q" then self.data.castle.bq = true end
             elseif stage == 3 then
-                if c >= 'a' and c <='h' then
+                if c >= 'a' and c <= 'h' then
                     self.data.ep = self.data.ep + 1 + string.byte(c) - 96
                 elseif c == '-' then
                     self.data.ep = -1
                 else
-                    self.data.ep = self.data.ep + 100 - 10*tonumber(c)
+                    self.data.ep = self.data.ep + 100 - 10 * tonumber(c)
                 end
             end
             ::continue::
         end
     end,
-
     print = function(self)
         io.write('\n8  ')
 

@@ -8,7 +8,6 @@
     Implementation : https://www.chessprogramming.org/Perft
     Expected output: https://www.chessprogramming.org/Perft_Results
 ]]
-
 function perft(board, depth)
     if depth == 0 then return 1 end
 
@@ -17,14 +16,18 @@ function perft(board, depth)
     local moves = board:genMoves()
 
     for i, move in ipairs(moves) do
-        board:genMoves()
         local preMove = board:toFEN()
 
+        printMove(move)
 
         if board:makeMove(move) then
+            print('a')
             nodes = nodes + perft(board, depth - 1)
+
             -- undo the move
             board:fromFEN(preMove)
+            --Reset the move list to what it was before the move
+            board.moveList = moves
         end
     end
 
