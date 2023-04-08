@@ -51,24 +51,24 @@ local Board = {
 
                 -- Check pushes
                 if self.board[to] == EMPTY then
-                    list[#list + 1] = move(i, to, 0)
+                    list[#list + 1] = move(i, to)
                     if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
                         --Push two squares if the square is free
                         if self.board[to - pawnDist * self.data.side] == EMPTY then
-                            list[#list + 1] = move(i, to - pawnDist * self.data.side, 0)
+                            list[#list + 1] = move(i, to - pawnDist * self.data.side)
                         end
                     end
                 end
 
                 -- Check Captures in both directions
-                if self:checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1, CAPTURE_FLAG) end
-                if self:checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1, CAPTURE_FLAG) end
+                if self:checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1) end
+                if self:checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1) end
             elseif pieceID == KING then
                 -- Castling moves and king moves
                 for j, dir in ipairs(offset[pieceID]) do
                     --Normal King moves
                     if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
-                        list[#list + 1] = move(i, i + dir, 0)
+                        list[#list + 1] = move(i, i + dir)
                     end
                 end
 
@@ -78,7 +78,7 @@ local Board = {
                 if self.data.side == WHITE and c.wq or self.data.side == BLACK and c.bq then
                     -- Check and add QC move
                     if self.board[i - 3] == EMPTY and self.board[i - 2] == EMPTY and self.board[i - 1] == EMPTY then
-                        list[#list + 1] = move(i, i - 2, CASTLE_FLAG)
+                        list[#list + 1] = move(i, i - 2)
                     end
                 end
 
@@ -86,7 +86,7 @@ local Board = {
                 if self.data.side == WHITE and c.wk or self.data.side == BLACK and c.bk then
                     -- Check and add KC move
                     if self.board[i + 2] == EMPTY and self.board[i + 1] == EMPTY then
-                        list[#list + 1] = move(i, i + 2, CASTLE_FLAG)
+                        list[#list + 1] = move(i, i + 2)
                     end
                 end
             else
@@ -97,13 +97,13 @@ local Board = {
                         for dist = 1, 8 do
                             local to = i + dist * dir
                             if self.board[to] == EMPTY then
-                                list[#list + 1] = move(i, to, 0)
+                                list[#list + 1] = move(i, to)
                             elseif self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
                                 -- We run into an allied piece or the edge of the board
                                 break
                             else
                                 -- We're capturing a piece and there aren't any more moves
-                                list[#list + 1] = move(i, to, CAPTURE_FLAG)
+                                list[#list + 1] = move(i, to)
                                 break
                             end
                         end
@@ -112,9 +112,7 @@ local Board = {
                     --Horses
                     for j, dir in ipairs(offset[pieceID]) do
                         if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
-                            local moveFlags = signum(self.board[i + dir]) == -1 * self.data.side and CAPTURE_FLAG or 0
-
-                            list[#list + 1] = move(i, i + dir, moveFlags)
+                            list[#list + 1] = move(i, i + dir)
                         end
                     end
                 end
@@ -211,6 +209,7 @@ local Board = {
             local pieceColor = signum(self.board[move.from])
 
             -- Make the move on the board
+            local isCapture = self.board[move.to] ~= EMPTY
             self.board[move.to] = self.board[move.from]
             self.board[move.from] = EMPTY
 
@@ -278,7 +277,7 @@ local Board = {
             end
 
             --Update 50 move counter
-            if pieceType == PAWN or move.flags == CAPTURE_FLAG then
+            if pieceType == PAWN or isCapture then
                 self.data.fiftyMoveRule = 0
             end
 

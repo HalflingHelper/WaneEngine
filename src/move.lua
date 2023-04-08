@@ -3,10 +3,9 @@
 --[[
     Returns a move!
     from, to - Indexes of the square the piece is moving from to the square the piece is moving to
-    flags encodes information about special kinds of moves: if a move is ep, castle, promotion
 ]]
-function move(from, to, flags)
-    return {from = from, to = to, flags = flags}
+function move(from, to)
+    return {from = from, to = to}
 end
 
 -- Returns true if two moves are the same!
@@ -48,7 +47,7 @@ function parseMove(s)
     local fromSquare = 120 - 19 - 10 * fromRank + fromFile
     local toSquare = 120 - 19 - 10 * toRank + toFile
 
-    return move(fromSquare, toSquare, 0)
+    return move(fromSquare, toSquare)
 
     -- return move(tonumber(s:sub(1, 3)), tonumber(s:sub(3)), 0)
 end
