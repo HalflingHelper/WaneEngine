@@ -34,6 +34,7 @@ local Board = {
             or self.data.ep == square
     end,
     --Generates all available pseudo legal moves in the position for the current color
+    --Returns a move list for testing 
     genMoves = function(self)
         local list = {}
         --Iterate over every square on the board
@@ -123,6 +124,7 @@ local Board = {
         end
 
         self.moveList = list
+        return list
     end,
     --[[
         TODO:
@@ -284,7 +286,6 @@ local Board = {
             -- If current side is white black just moved
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
-            printMove(move)
             do return true end
 
             ::continue::
@@ -355,7 +356,11 @@ local Board = {
         return fen
     end,
     --Sets board to the same state as the given fen string
+    --TODO: Half Move Clock and Full Move Count
     fromFEN = function(self, fen)
+        self.data.castle = {wk=false, wq=false, bk=false, bq=false}
+        self.data.ep = 0
+
         local stage = 0
         local sqIndex = 22
         for c in fen:gmatch(".") do
@@ -382,6 +387,20 @@ local Board = {
             elseif stage == 1 then
                 --Piece colors
                 self.data.side = c == "w" and WHITE or BLACK
+            elseif stage == 2 then
+                --Castling
+                if c == "K" then self.data.castle.wk = true end
+                if c == "Q" then self.data.castle.wq = true end
+                if c == "k" then self.data.castle.bk = true end
+                if c == "q" then self.data.castle.bq = true end
+            elseif stage == 3 then
+                if c >= 'a' and c <='h' then
+                    self.data.ep = self.data.ep + 1 + string.byte(c) - 96
+                elseif c == '-' then
+                    self.data.ep = -1
+                else
+                    self.data.ep = self.data.ep + 100 - 10*tonumber(c)
+                end
             end
             ::continue::
         end
