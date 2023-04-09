@@ -1,11 +1,17 @@
 --Move datatype and functions for move checking
+--TODO: Save En Passant Square that was created
 
 --[[
     Returns a move!
     from, to - Indexes of the square the piece is moving from to the square the piece is moving to
 ]]
-function move(from, to)
-    return {from = from, to = to}
+function move(from, to, castle, captured, ep)
+    local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false}
+    if castle then 
+        m.castle = {}
+        for k, v in pairs(castle) do m.castle[k] = v end 
+    end
+    return m
 end
 
 -- Returns true if two moves are the same!
@@ -30,12 +36,12 @@ function parseMove(s)
         error("Please enter a move in the form '<from-square> <to-square>'", 0)
     end
 
-    local fromFile = s:byte(1,1) - 96
-    local fromRank = tonumber(s:sub(2,2))
+    local fromFile = s:byte(1, 1) - 96
+    local fromRank = tonumber(s:sub(2, 2))
 
-    local toFile = s:byte(3,3) - 96
-    local toRank = tonumber(s:sub(4,4))
-    
+    local toFile = s:byte(3, 3) - 96
+    local toRank = tonumber(s:sub(4, 4))
+
     if not (isValidRank(fromRank) and isValidRank(toRank)) then
         error("Enter rank information as a number from 1 to 8", 0)
     end
@@ -54,5 +60,4 @@ end
 
 function printMove(move)
     print("from: " .. move.from .. ", to: " .. move.to)
-
 end

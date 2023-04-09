@@ -52,24 +52,26 @@ local Board = {
 
                 -- Check pushes
                 if self.board[to] == EMPTY then
-                    list[#list + 1] = move(i, to)
+                    list[#list + 1] = move(i, to, self.data.castle)
                     if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
                         --Push two squares if the square is free
                         if self.board[to - pawnDist * self.data.side] == EMPTY then
-                            list[#list + 1] = move(i, to - pawnDist * self.data.side)
+                            list[#list + 1] = move(i, to - pawnDist * self.data.side, self.data.castle)
                         end
                     end
                 end
 
                 -- Check Captures in both directions
-                if self:checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1) end
-                if self:checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1) end
+                if self:checkPawnCaps(to + 1) then list[#list + 1] = move(i, to + 1, self.data.castle, self.board[to + 1],
+                    to + 1 == self.data.ep) end
+                if self:checkPawnCaps(to - 1) then list[#list + 1] = move(i, to - 1, self.data.castle, self.board[to - 1],
+                    to - 1 == self.data.ep) end
             elseif pieceID == KING then
                 -- Castling moves and king moves
                 for j, dir in ipairs(offset[pieceID]) do
                     --Normal King moves
                     if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
-                        list[#list + 1] = move(i, i + dir)
+                        list[#list + 1] = move(i, i + dir, self.data.castle, self.board[i + dir])
                     end
                 end
 
@@ -79,7 +81,7 @@ local Board = {
                 if self.data.side == WHITE and c.wq or self.data.side == BLACK and c.bq then
                     -- Check and add QC move
                     if self.board[i - 3] == EMPTY and self.board[i - 2] == EMPTY and self.board[i - 1] == EMPTY then
-                        list[#list + 1] = move(i, i - 2)
+                        list[#list + 1] = move(i, i - 2, self.data.castle)
                     end
                 end
 
@@ -87,7 +89,7 @@ local Board = {
                 if self.data.side == WHITE and c.wk or self.data.side == BLACK and c.bk then
                     -- Check and add KC move
                     if self.board[i + 2] == EMPTY and self.board[i + 1] == EMPTY then
-                        list[#list + 1] = move(i, i + 2)
+                        list[#list + 1] = move(i, i + 2, self.data.castle)
                     end
                 end
             else
@@ -98,13 +100,13 @@ local Board = {
                         for dist = 1, 8 do
                             local to = i + dist * dir
                             if self.board[to] == EMPTY then
-                                list[#list + 1] = move(i, to)
+                                list[#list + 1] = move(i, to, self.data.castle)
                             elseif self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
                                 -- We run into an allied piece or the edge of the board
                                 break
                             else
                                 -- We're capturing a piece and there aren't any more moves
-                                list[#list + 1] = move(i, to)
+                                list[#list + 1] = move(i, to, self.data.castle, self.board[i + dir])
                                 break
                             end
                         end
@@ -113,7 +115,7 @@ local Board = {
                     --Horses
                     for j, dir in ipairs(offset[pieceID]) do
                         if self.board[i + dir] == EMPTY or (self.board[i + dir] ~= INVALID and signum(self.board[i + dir]) ~= self.data.side) then
-                            list[#list + 1] = move(i, i + dir)
+                            list[#list + 1] = move(i, i + dir, self.data.castle, self.board[i + dir])
                         end
                     end
                 end
@@ -131,7 +133,7 @@ local Board = {
     isAttacked = function(self, idx)
         --Look for knights
         for i, dir in ipairs(offset[KNIGHT]) do
-            if math.abs(self.board[idx + dir]) == KNIGHT and signum(self.board[idx + dir]) ~= self.data.side then
+            if math.abs(self.board[idx + dir]) == KNIGHT and signum(self.board[idx + dir]) == self.data.side then
                 return true
             end
         end
@@ -139,8 +141,8 @@ local Board = {
         for i, dir in ipairs(offset[BISHOP]) do
             for dist = 1, 8 do
                 local to = idx + dist * dir
-                if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
-                    -- We run into an allied piece or the edge of the board
+                if self.board[to] == INVALID or signum(self.board[to]) ~= self.data.side then
+                    -- We run into a piece the same color as the king or the edge of the board
                     break
                 end
 
@@ -159,7 +161,7 @@ local Board = {
         for i, dir in ipairs(offset[ROOK]) do
             for dist = 1, 8 do
                 local to = idx + dist * dir
-                if self.board[to] == INVALID or signum(self.board[to]) == self.data.side then
+                if self.board[to] == INVALID or signum(self.board[to]) ~= self.data.side then
                     -- We run into an allied piece or the edge of the board
                     break
                 end
@@ -179,12 +181,12 @@ local Board = {
         local candidate
         -- Pawns to the left
         candidate = self.board[idx - 11 * self.data.side]
-        if signum(candidate) ~= self.data.side and math.abs(candidate) == PAWN then
+        if signum(candidate) == self.data.side and math.abs(candidate) == PAWN then
             return true
         end
         -- Pawns to the right
         candidate = self.board[idx - 9 * self.data.side]
-        if signum(candidate) ~= self.data.side and math.abs(candidate) == PAWN then
+        if signum(candidate) == self.data.side and math.abs(candidate) == PAWN then
             return true
         end
         -- We didn't find anything
@@ -197,7 +199,7 @@ local Board = {
     inCheck = function(self)
         -- Find the king
         for i, square in ipairs(self.board) do
-            if math.abs(square) == KING and signum(square) == self.data.side then
+            if math.abs(square) == KING and signum(square) ~= self.data.side then
                 -- Returns true if the square the king is on is attacked
                 return self:isAttacked(i)
             end
@@ -205,8 +207,37 @@ local Board = {
         -- Unreachable
         return false
     end,
+    -- Blindly assumes that move was the last move made, this could create issues
+    takebackMove = function(self, move)
+        self.data.side = self.data.side * -1
+
+        if move.castle then
+            for k, v in pairs(move.castle) do self.data.castle[k] = v end
+        end
+
+        self.board[move.from] = self.board[move.to]
+
+        if not move.ep then
+            self.board[move.to] = move.captured
+        else --Need to replace en-passant pawns
+            self.board[move.to + self.data.side * 10] = -PAWN * self.data.side
+        end
+
+        --Moving the rook for castling
+        if math.abs(self.board[move.from]) == KING and math.abs(move.from - move.to) == 2 then
+            if move.to > move.from then
+                --We want the KS rook
+                self.board[move.to + 1] = self.board[move.to - 1]
+                self.board[move.to - 1] = EMPTY
+            else
+                --We want the QS rook
+                self.board[move.to - 2] = self.board[move.to + 1]
+                self.board[move.to + 1] = EMPTY
+            end
+        end
+    end,
     --[[
-        Makes the listed move on the board
+        Makes the listed move on the board, doesn't check for legality
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
     ]]
     makeMove = function(self, move)
@@ -218,34 +249,22 @@ local Board = {
             local pieceColor = signum(self.board[move.from])
 
             -- Make the move on the board
-
-            --TODO: Removing pawns for EP captures, replacing captured pieces when it's a check
             local isCapture = self.board[move.to] ~= EMPTY
             self.board[move.to] = self.board[move.from]
             self.board[move.from] = EMPTY
 
+            self.data.side = -1 * self.data.side
+
             -- Remove the piece if the move was an EP capture
             if pieceType == PAWN and move.to == self.data.ep then
-                isCapture = true
                 self.board[move.to + 10 * signum(move.from - move.to)] = EMPTY
-            end
-
-            --Check that the king isn't directly in check, otherwise undo the move and return false
-            if self:inCheck() then
-                self.board[move.from] = self.board[move.to]
-                self.board[move.to] = EMPTY
-
-                if pieceType == PAWN and move.to == self.data.ep then
-                    self.board[move.to + 10 * signum(move.from - move.to)] = -1 * self.data.side * PAWN
-                end
-                return false
             end
 
             -- Castling checks
             if pieceType == KING and math.abs(move.from - move.to) == 2 then
                 if move.to > move.from then
                     --Make sure the king didn't move through check
-                    if self:isAttacked(move.to - 1) then
+                    if self:isAttacked(move.to - 1, true) then
                         self.board[move.from] = self.board[move.to]
                         self.board[move.to] = EMPTY
                         return false
@@ -255,7 +274,7 @@ local Board = {
                     self.board[move.to + 1] = EMPTY
                 else
                     --Make sure king didn't castle through check
-                    if self:isAttacked(move.to + 1) then
+                    if self:isAttacked(move.to + 1, true) then
                         self.board[move.from] = self.board[move.to]
                         self.board[move.to] = EMPTY
                         return false
@@ -306,7 +325,6 @@ local Board = {
 
             self.data.fiftyMoveRule = self.data.fiftyMoveRule + 1
             -- If current side is white black just moved
-            self.data.side = -1 * self.data.side
 
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
@@ -318,6 +336,19 @@ local Board = {
         -- Return false if the move isn't in the move list
         return false
     end,
+ --[[
+        Makes the listed move on the board
+        If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
+    ]]
+    makeLegalMove = function(self, move)
+        self:makeMove(move)
+        if self:inCheck() then
+            self:takebackMove(move)
+            return false
+        end
+        return true
+    end,
+
     -- Returns the FEN string representation of the board
     -- I am aware that this isn't the best way to do this sort of thing but oh well
     toFEN = function(self)
