@@ -18,10 +18,7 @@ function perft(board, depth)
     for i, move in ipairs(moves) do
         local preMove = board:toFEN()
 
-        printMove(move)
-
         if board:makeMove(move) then
-            print('a')
             nodes = nodes + perft(board, depth - 1)
 
             -- undo the move

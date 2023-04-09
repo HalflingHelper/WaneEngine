@@ -33,6 +33,7 @@ local Board = {
             signum(self.board[square]) ~= self.data.side
             or self.data.ep == square
     end,
+    --TODO: Pawn promotions, requires changing move rep to include promotion value
     --Generates all available pseudo-legal moves in the position for the current color
     --Returns a move list for testing
     genMoves = function(self)
@@ -125,7 +126,6 @@ local Board = {
         return list
     end,
     --[[
-        TODO:
         Returns true if the square at said sqIndex is attacked by pieces of the opposite color
     ]]
     isAttacked = function(self, idx)
@@ -206,7 +206,6 @@ local Board = {
         return false
     end,
     --[[
-        TODO: Add stuff for making sure a move isn't illegal because of checks
         Makes the listed move on the board
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
     ]]
@@ -225,10 +224,20 @@ local Board = {
             self.board[move.to] = self.board[move.from]
             self.board[move.from] = EMPTY
 
+            -- Remove the piece if the move was an EP capture
+            if pieceType == PAWN and move.to == self.data.ep then
+                isCapture = true
+                self.board[move.to + 10 * signum(move.from - move.to)] = EMPTY
+            end
+
             --Check that the king isn't directly in check, otherwise undo the move and return false
             if self:inCheck() then
                 self.board[move.from] = self.board[move.to]
                 self.board[move.to] = EMPTY
+
+                if pieceType == PAWN and move.to == self.data.ep then
+                    self.board[move.to + 10 * signum(move.from - move.to)] = -1 * self.data.side * PAWN
+                end
                 return false
             end
 
@@ -278,11 +287,6 @@ local Board = {
                 elseif move.from == 99 then
                     self.data.castle.wk = false
                 end
-            end
-
-            -- Remove the piece if the move was an EP capture'
-            if pieceType == PAWN and move.to == self.data.ep then
-                self.board[move.to + 10 * signum(move.from - move.to)] = EMPTY
             end
 
             -- En Passant Checks
@@ -435,6 +439,7 @@ local Board = {
             ::continue::
         end
     end,
+    -- Prints out the board
     print = function(self)
         io.write('\n8  ')
 
