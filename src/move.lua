@@ -4,13 +4,14 @@
 --[[
     Returns a move!
     from, to - Indexes of the square the piece is moving from to the square the piece is moving to
+    castle - the state of the castle flags before the move is made
+    captured - the id of the captured piece
+    ep - is true if the move is an en passant capture
 ]]
-function move(from, to, castle, captured, ep)
-    local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false}
-    if castle then 
-        m.castle = {}
-        for k, v in pairs(castle) do m.castle[k] = v end 
-    end
+function move(from, to, castle, captured, ep, epSq)
+    local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false, epSq = epSq or -1 }
+    m.castle = {}
+    for k, v in pairs(castle) do m.castle[k] = v end
     return m
 end
 

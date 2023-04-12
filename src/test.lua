@@ -16,14 +16,14 @@ function perft(board, depth)
     local moves = board:genMoves()
 
     for i, move in ipairs(moves) do
-        board:makeMove(move)
-        if not board:inCheck() then
-            nodes = nodes + perft(board, depth - 1)
-
-        -- undo the move
-        board:takebackMove(move)
-        --Reset the move list to what it was before the move
-        board.moveList = moves
+        if board:makeMove(move) then
+            if not board:inCheck() then
+                nodes = nodes + perft(board, depth - 1)
+            end
+            -- undo the move
+            board:takebackMove(move)
+            --Reset the move list to what it was before the move
+            board.moveList = moves
         end
     end
 
