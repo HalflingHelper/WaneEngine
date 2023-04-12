@@ -31,7 +31,7 @@ Board:init()
 --Board:fromFen("")
 
 local st = os.clock()
-print(perft(Board, 6))
+print(perft(Board, 6)) --Correct in 690.029 Seconds
 local et = os.clock()
 
 print(et - st)
