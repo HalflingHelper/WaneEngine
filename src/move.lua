@@ -1,5 +1,4 @@
 --Move datatype and functions for move checking
---TODO: Save En Passant Square that was created
 
 --[[
     Returns a move!
@@ -11,7 +10,9 @@
 function move(from, to, castle, captured, ep, epSq)
     local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false, epSq = epSq or -1 }
     m.castle = {}
-    for k, v in pairs(castle) do m.castle[k] = v end
+    if castle then
+        for k, v in pairs(castle) do m.castle[k] = v end
+    end
     return m
 end
 

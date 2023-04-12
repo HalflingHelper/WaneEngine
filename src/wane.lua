@@ -16,7 +16,6 @@
 --TODO: ???? Change board representation to a piece array and a color array to reduce overhead of math.abs / signum functions?
 --TODO: Game end states (includes handling movecounts and shit)
 
---TODO: Movegen doesn't work, 4,865,608 instaed of 4,865,609 at depth 5
 --TODO: Something better than FEN conversion for taking back moves
     --Flags I would need: Type of piece captured. If it was EP, State of castle flags for king and rook moves
 
@@ -28,10 +27,11 @@ Board = require 'board'
 
 Board:init()
 -- Use various FEN testing string here
---Board:fromFen("")
+Board:fromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8")
+print(Board:toFEN())
 
 local st = os.clock()
-print(perft(Board, 6)) --Correct in 690.029 Seconds
+ print(perft(Board, 1)) 
 local et = os.clock()
 
 print(et - st)

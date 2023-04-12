@@ -29,3 +29,9 @@ function perft(board, depth)
 
     return nodes
 end
+
+--Results:
+--  Starting Position
+    --Depth 4: Correct in ~0.793 sec
+    --Depth 5: Correct in ~26.589 sec
+    --Depth 6: Correct in ~690.029 Seconds
