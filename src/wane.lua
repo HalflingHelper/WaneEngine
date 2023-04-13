@@ -27,11 +27,11 @@ Board = require 'board'
 
 Board:init()
 -- Use various FEN testing string here
-Board:fromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8")
+-- Board:fromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8 ")
 print(Board:toFEN())
 
 local st = os.clock()
-print(perft(Board, 3)) 
+print(perft(Board, 4)) 
 local et = os.clock()
 
 print(et - st)

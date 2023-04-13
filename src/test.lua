@@ -8,7 +8,7 @@
     Implementation : https://www.chessprogramming.org/Perft
     Expected output: https://www.chessprogramming.org/Perft_Results
 ]]
-function perft(board, depth)
+function perft(board, depth, printDepth)
     if depth == 0 then return 1 end
 
     local nodes = 0
@@ -18,7 +18,9 @@ function perft(board, depth)
     for i, move in ipairs(moves) do
         if board:makeMove(move) then
             if not board:inCheck() then
-                nodes = nodes + perft(board, depth - 1)
+                local add =  perft(board, depth - 1, printDepth)
+                nodes = nodes + add
+                if depth == printDepth then print(moveToLAN(move), add) end
             end
             -- undo the move
             board:takebackMove(move)

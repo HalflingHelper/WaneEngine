@@ -19,7 +19,7 @@ end
 -- Returns true if two moves are the same!
 -- Doesn't compare flags, only the squares that are being moved between
 function moveEqual(m1, m2)
-    return m1.from == m2.from and m1.to == m2.to
+    return m1.from == m2.from and m1.to == m2.to and m1.promo == m2.promo
 end
 
 local function isValidRank(r)
@@ -58,6 +58,10 @@ function parseMove(s)
     return move(fromSquare, toSquare)
 
     -- return move(tonumber(s:sub(1, 3)), tonumber(s:sub(3)), 0)
+end
+
+function moveToLAN(move)
+    return sqToCoords(move.from) .. sqToCoords(move.to)
 end
 
 function printMove(move)
