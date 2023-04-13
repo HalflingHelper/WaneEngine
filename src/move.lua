@@ -7,8 +7,8 @@
     captured - the id of the captured piece
     ep - is true if the move is an en passant capture
 ]]
-function move(from, to, castle, captured, ep, epSq)
-    local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false, epSq = epSq or -1 }
+function move(from, to, castle, captured, ep, epSq, promo)
+    local m = { from = from, to = to, captured = captured or EMPTY, ep = ep or false, epSq = epSq or -1, promo = promo or EMPTY}
     m.castle = {}
     if castle then
         for k, v in pairs(castle) do m.castle[k] = v end

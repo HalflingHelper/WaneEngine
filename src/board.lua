@@ -32,7 +32,7 @@ local Board = {
             self.colors[square] ~= self.data.side
             or self.data.ep == square
     end,
-    --TODO: Pawn promotions, requires changing move rep to include promotion value
+    --TODO: Pawn promotions, requires changing move rep to include promotion value or updating takebackMove
     --Generates all available pseudo-legal moves in the position for the current color
     --Returns a move list for testing
     genMoves = function(self)
@@ -42,15 +42,26 @@ local Board = {
             --If the piece is the correct color
             if (piece == INVALID or piece == EMPTY or self.colors[i] ~= self.data.side) then goto continue end
 
+            --TODO: Lots of repetition in generating pawn moves
             if piece == PAWN then
                 -- Pawn Moves are specifies
                 local pawnDist = 10
                 local rank = getRank(i)
                 local to = i - self.data.side * pawnDist
 
+                local isPromo = self.data.side == WHITE and getRank(to) == 8 or
+                self.data.side == BLACK and getRank(to) == 1
+
                 -- Check pushes
                 if self.pieces[to] == EMPTY then
-                    list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep)
+                    -- Check for promotions before
+                    if isPromo then
+                        for type = KNIGHT, QUEEN do
+                            list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep, type)
+                        end
+                    else
+                        list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep)
+                    end
                     if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
                         --Push two squares if the square is free
                         if self.pieces[to - pawnDist * self.data.side] == EMPTY then
@@ -62,12 +73,24 @@ local Board = {
 
                 -- Check Captures in both directions
                 if self:checkPawnCaps(to + 1) then
-                    list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1],
-                        to + 1 == self.data.ep, self.data.ep)
+                    if isPromo then
+                        for type = KNIGHT, QUEEN do
+                            list[#list + 1] = move(i, to + 1, self.data.castle, EMPTY, false, self.data.ep, type)
+                        end
+                    else
+                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], to + 1 == self.data.ep,
+                        self.data.ep)
+                    end
                 end
                 if self:checkPawnCaps(to - 1) then
-                    list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1],
-                        to - 1 == self.data.ep, self.data.ep)
+                    if isPromo then
+                        for type = KNIGHT, QUEEN do
+                            list[#list + 1] = move(i, to - 1, self.data.castle, EMPTY, false, self.data.ep, type)
+                        end
+                    else
+                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to + 1], to + 1 == self.data.ep,
+                        self.data.ep)
+                    end
                 end
             elseif piece == KING then
                 -- Castling moves and king moves
@@ -121,7 +144,7 @@ local Board = {
                             (self.pieces[i + dir] ~= INVALID and
                             self.colors[i + dir] ~= self.data.side) then
                             list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], false,
-                            self.data.ep)
+                                self.data.ep)
                         end
                     end
                 end
@@ -225,6 +248,11 @@ local Board = {
         self.pieces[move.from] = self.pieces[move.to]
         self.colors[move.from] = self.colors[move.to]
 
+        --Reverting back to a pawn
+        if move.promo ~= EMPTY then
+            self.pieces[move.from] = PAWN
+        end
+
         if move.captured ~= EMPTY then
             self.pieces[move.to] = move.captured
             self.colors[move.to] = -self.data.side
@@ -265,17 +293,22 @@ local Board = {
         for i, v in ipairs(self.moveList) do
             if not moveEqual(v, move) then goto continue end
 
+            -- Noting some information about the move
             local pieceType = self.pieces[move.from]
             local pieceColor = self.colors[move.from]
 
-            -- Make the move on the board
             local isCapture = self.pieces[move.to] ~= EMPTY
 
+            -- Make the move on the board
             self.pieces[move.to] = self.pieces[move.from]
             self.pieces[move.from] = EMPTY
 
             self.colors[move.to] = self.colors[move.from]
             self.colors[move.from] = EMPTY
+
+            if move.promo ~= EMPTY then
+                self.pieces[move.to] = move.promo
+            end
 
             -- Remove the piece if the move was an EP capture
             if pieceType == PAWN and move.to == self.data.ep then
