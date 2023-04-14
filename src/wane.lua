@@ -13,7 +13,6 @@
 ]]
 
 
---TODO: ???? Change board representation to a piece array and a color array to reduce overhead of math.abs / signum functions?
 --TODO: Game end states (includes handling movecounts and shit)
 
 --TODO: Something better than FEN conversion for taking back moves
@@ -27,7 +26,7 @@ Board = require 'board'
 
 Board:init()
 -- Use various FEN testing string here
--- Board:fromFEN("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8 ")
+Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
 print(Board:toFEN())
 
 local st = os.clock()

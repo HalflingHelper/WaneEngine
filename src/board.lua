@@ -52,22 +52,22 @@ local Board = {
                 local to = i - self.data.side * pawnDist
 
                 local isPromo = (self.data.side == WHITE and getRank(to) == 8) or
-                (self.data.side == BLACK and getRank(to) == 1)
+                    (self.data.side == BLACK and getRank(to) == 1)
 
                 -- Check pushes
                 if self.pieces[to] == EMPTY then
                     -- Check for promotions before
                     if isPromo then
                         for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep, type)
+                            list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep, type)
                         end
                     else
-                        list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep)
+                        list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
                     end
                     if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
                         --Push two squares if the square is free
                         if self.pieces[to - pawnDist * self.data.side] == EMPTY then
-                            list[#list + 1] = move(i, to - pawnDist * self.data.side, self.data.castle, EMPTY, false,
+                            list[#list + 1] = move(i, to - pawnDist * self.data.side, self.data.castle, EMPTY,
                                 self.data.ep)
                         end
                     end
@@ -77,22 +77,22 @@ local Board = {
                 if self:checkPawnCaps(to + 1) then
                     if isPromo then
                         for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], false, self.data.ep,
-                            type)
+                            list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], self.data.ep,
+                                type)
                         end
                     else
-                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], to + 1 == self.data.ep,
+                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1],
                             self.data.ep)
                     end
                 end
                 if self:checkPawnCaps(to - 1) then
                     if isPromo then
                         for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], false, self.data.ep,
-                            type)
+                            list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], self.data.ep,
+                                type)
                         end
                     else
-                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], to - 1 == self.data.ep,
+                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1],
                             self.data.ep)
                     end
                 end
@@ -101,7 +101,7 @@ local Board = {
                 for j, dir in ipairs(offset[piece]) do
                     --Normal King moves
                     if self.pieces[i + dir] == EMPTY or (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= self.data.side) then
-                        list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], false, self.data.ep)
+                        list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
                     end
                 end
 
@@ -111,7 +111,7 @@ local Board = {
                 if self.data.side == WHITE and c.wq or self.data.side == BLACK and c.bq then
                     -- Check and add QC move
                     if self.pieces[i - 3] == EMPTY and self.pieces[i - 2] == EMPTY and self.pieces[i - 1] == EMPTY and self.pieces[i - 4] == ROOK then
-                        list[#list + 1] = move(i, i - 2, self.data.castle, EMPTY, false, self.data.ep)
+                        list[#list + 1] = move(i, i - 2, self.data.castle, EMPTY, self.data.ep)
                     end
                 end
 
@@ -119,7 +119,7 @@ local Board = {
                 if self.data.side == WHITE and c.wk or self.data.side == BLACK and c.bk then
                     -- Check and add KC move
                     if self.pieces[i + 2] == EMPTY and self.pieces[i + 1] == EMPTY and self.pieces[i + 3] == ROOK then
-                        list[#list + 1] = move(i, i + 2, self.data.castle, EMPTY, false, self.data.ep)
+                        list[#list + 1] = move(i, i + 2, self.data.castle, EMPTY, self.data.ep)
                     end
                 end
             else
@@ -127,16 +127,16 @@ local Board = {
                 if slide[piece] then
                     -- Bishops, Rooks, Queens
                     for j, dir in ipairs(offset[piece]) do
-                        for dist = 1, 8 do
+                        for dist = 1, 7 do
                             local to = i + dist * dir
                             if self.pieces[to] == EMPTY then
-                                list[#list + 1] = move(i, to, self.data.castle, EMPTY, false, self.data.ep)
+                                list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
                             elseif self.pieces[to] == INVALID or self.colors[to] == self.data.side then
                                 -- We run into an allied piece or the edge of the board
                                 break
                             else
                                 -- We're capturing a piece and there aren't any more moves
-                                list[#list + 1] = move(i, to, self.data.castle, self.pieces[to], false, self.data.ep)
+                                list[#list + 1] = move(i, to, self.data.castle, self.pieces[to], self.data.ep)
                                 break
                             end
                         end
@@ -147,8 +147,7 @@ local Board = {
                         if self.pieces[i + dir] == EMPTY or
                             (self.pieces[i + dir] ~= INVALID and
                             self.colors[i + dir] ~= self.data.side) then
-                            list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], false,
-                                self.data.ep)
+                            list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
                         end
                     end
                 end
@@ -172,7 +171,7 @@ local Board = {
         end
         --Look for sliding pieces (rook, bishop, queen)
         for i, dir in ipairs(offset[BISHOP]) do
-            for dist = 1, 8 do
+            for dist = 1, 7 do
                 local to = idx + dist * dir
                 if self.pieces[to] == INVALID or self.colors[to] == -1 * self.data.side then
                     -- We run into a piece the same color as the king or the edge of the board
@@ -192,7 +191,7 @@ local Board = {
         end
 
         for i, dir in ipairs(offset[ROOK]) do
-            for dist = 1, 8 do
+            for dist = 1, 7 do
                 local to = idx + dist * dir
                 if self.pieces[to] == INVALID or self.colors[to] == -1 * self.data.side then
                     -- We run into an allied piece or the edge of the board
@@ -266,13 +265,13 @@ local Board = {
         end
 
         --Need to replace en-passant pawns
-        if move.ep then
+        if self.pieces[move.from] == PAWN and move.to == self.data.ep then
             self.pieces[move.to + self.data.side * 10] = PAWN
             self.colors[move.to + self.data.side * 10] = -self.data.side
-        end
 
-        --Moving the rook for castling
-        if self.pieces[move.from] == KING and math.abs(move.from - move.to) == 2 then
+
+            --Moving the rook for castling
+        elseif self.pieces[move.from] == KING and math.abs(move.from - move.to) == 2 then
             if move.to > move.from then
                 --We want the KS rook
                 self.pieces[move.to + 1] = self.pieces[move.to - 1]
@@ -291,6 +290,8 @@ local Board = {
     --[[
         Makes the listed move on the board, doesn't check for legality
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
+        TODO: This only uses from to, and promo, maybe only add the extra information on the spot to save space until to move is actually made
+            Add on the spot and add to move history
     ]]
     makeMove = function(self, move)
         --Make sure that move exists in the move list
@@ -310,55 +311,55 @@ local Board = {
             self.colors[move.to] = self.colors[move.from]
             self.colors[move.from] = EMPTY
 
-            if move.promo ~= EMPTY then
-                self.pieces[move.to] = move.promo
-            end
-
-            -- Remove the piece if the move was an EP capture
-            if pieceType == PAWN and move.to == self.data.ep then
-                self.pieces[move.to + 10 * signum(move.from - move.to)] = EMPTY
-                self.colors[move.to + 10 * signum(move.from - move.to)] = EMPTY
-            end
-
             self.data.side = -1 * self.data.side
 
-            -- Castling checks
-            if pieceType == KING and math.abs(move.from - move.to) == 2 then
-                if move.to > move.from then
-                    --Make sure the king didn't move through check
-                    if self:isAttacked(move.from + 1) or self:isAttacked(move.from) then
-                        self.pieces[move.from] = self.pieces[move.to]
-                        self.pieces[move.to] = EMPTY
-                        self.colors[move.from] = self.colors[move.to]
-                        self.colors[move.to] = EMPTY
-                        self.data.side = -1 * self.data.side
-                        return false
-                    end
-                    --We want the KS rook
-                    self.pieces[move.to - 1] = self.pieces[move.to + 1]
-                    self.pieces[move.to + 1] = EMPTY
-                    self.colors[move.to - 1] = self.colors[move.to + 1]
-                    self.colors[move.to + 1] = EMPTY
-                else
-                    --Make sure king didn't castle through check
-                    if self:isAttacked(move.from - 1) or self:isAttacked(move.from) then
-                        self.pieces[move.from] = self.pieces[move.to]
-                        self.pieces[move.to] = EMPTY
-                        self.colors[move.from] = self.colors[move.to]
-                        self.colors[move.to] = EMPTY
-                        self.data.side = -1 * self.data.side
-                        return false
-                    end
-                    --We want the QS rook
-                    self.pieces[move.to + 1] = self.pieces[move.to - 2]
-                    self.pieces[move.to - 2] = EMPTY
-                    self.colors[move.to + 1] = self.colors[move.to - 2]
-                    self.colors[move.to - 2] = EMPTY
+            --Piece specific move checks
+            if pieceType == PAWN then
+                if move.promo ~= EMPTY then
+                    --Promotion activation
+                    self.pieces[move.to] = move.promo
+                elseif move.to == self.data.ep then
+                    -- Remove the captured piece if the move was an EP capture
+                    self.pieces[move.to + 10 * pieceColor] = EMPTY
+                    self.colors[move.to + 10 * pieceColor] = EMPTY
                 end
-            end
+            elseif pieceType == KING then
+                --Makes sure castling is valid
+                if math.abs(move.from - move.to) == 2 then
+                    if move.to > move.from then
+                        --Make sure the king didn't move through check
+                        if self:isAttacked(move.from + 1) or self:isAttacked(move.from) then
+                            self.pieces[move.from] = self.pieces[move.to]
+                            self.pieces[move.to] = EMPTY
+                            self.colors[move.from] = self.colors[move.to]
+                            self.colors[move.to] = EMPTY
+                            self.data.side = -1 * self.data.side
+                            return false
+                        end
+                        --We want the KS rook
+                        self.pieces[move.to - 1] = self.pieces[move.to + 1]
+                        self.pieces[move.to + 1] = EMPTY
+                        self.colors[move.to - 1] = self.colors[move.to + 1]
+                        self.colors[move.to + 1] = EMPTY
+                    else
+                        --Make sure king didn't castle through check
+                        if self:isAttacked(move.from - 1) or self:isAttacked(move.from) then
+                            self.pieces[move.from] = self.pieces[move.to]
+                            self.pieces[move.to] = EMPTY
+                            self.colors[move.from] = self.colors[move.to]
+                            self.colors[move.to] = EMPTY
+                            self.data.side = -1 * self.data.side
+                            return false
+                        end
+                        --We want the QS rook
+                        self.pieces[move.to + 1] = self.pieces[move.to - 2]
+                        self.pieces[move.to - 2] = EMPTY
+                        self.colors[move.to + 1] = self.colors[move.to - 2]
+                        self.colors[move.to - 2] = EMPTY
+                    end
+                end
 
-            --Update castle flags
-            if pieceType == KING then
+                -- Removes castle flags
                 if pieceColor == BLACK then
                     self.data.castle.bq = false
                     self.data.castle.bk = false
@@ -366,9 +367,8 @@ local Board = {
                     self.data.castle.wq = false
                     self.data.castle.wk = false
                 end
-            end
-
-            if pieceType == ROOK then
+            elseif pieceType == ROOK then
+                --Dismantling castle flags for rooks
                 if move.from == 22 then
                     self.data.castle.bq = false
                 elseif move.from == 29 then
@@ -383,7 +383,7 @@ local Board = {
             --Update EP flags if the move is a double pawn push
             if pieceType == PAWN and math.abs(move.to - move.from) == 20 then
                 --Set the en passant flag to the targeted square
-                self.data.ep = move.to + 10 * signum(move.from - move.to)
+                self.data.ep = move.to + 10 * pieceColor
             else
                 -- Reset the en passant flag
                 self.data.ep = -1
