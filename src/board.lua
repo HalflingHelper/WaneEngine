@@ -42,7 +42,7 @@ local Board = {
         --Iterate over every square on the board
         for i, piece in ipairs(self.pieces) do
             --If the piece is the correct color
-            if (piece == INVALID or piece == EMPTY or self.colors[i] ~= self.data.side) then goto continue end
+            if self.colors[i] ~= self.data.side then goto continue end
 
             --TODO: Lots of repetition in generating pawn moves
             if piece == PAWN then
@@ -51,12 +51,12 @@ local Board = {
                 local rank = getRank(i)
                 local to = i - self.data.side * pawnDist
 
-                local isPromo = (self.data.side == WHITE and getRank(to) == 8) or
-                    (self.data.side == BLACK and getRank(to) == 1)
+                local isPromo = (self.data.side == WHITE and rank == 7) or
+                    (self.data.side == BLACK and rank == 2)
 
                 -- Check pushes
                 if self.pieces[to] == EMPTY then
-                    -- Check for promotions before
+                    -- Normal push
                     if isPromo then
                         for type = KNIGHT, QUEEN do
                             list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep, type)
@@ -64,8 +64,8 @@ local Board = {
                     else
                         list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
                     end
+                    --Double push
                     if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
-                        --Push two squares if the square is free
                         if self.pieces[to - pawnDist * self.data.side] == EMPTY then
                             list[#list + 1] = move(i, to - pawnDist * self.data.side, self.data.castle, EMPTY,
                                 self.data.ep)
@@ -81,8 +81,7 @@ local Board = {
                                 type)
                         end
                     else
-                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1],
-                            self.data.ep)
+                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], self.data.ep)
                     end
                 end
                 if self:checkPawnCaps(to - 1) then
@@ -92,8 +91,7 @@ local Board = {
                                 type)
                         end
                     else
-                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1],
-                            self.data.ep)
+                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], self.data.ep)
                     end
                 end
             elseif piece == KING then
@@ -144,9 +142,7 @@ local Board = {
                 else
                     --Horses
                     for j, dir in ipairs(offset[piece]) do
-                        if self.pieces[i + dir] == EMPTY or
-                            (self.pieces[i + dir] ~= INVALID and
-                            self.colors[i + dir] ~= self.data.side) then
+                        if (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= self.data.side) then
                             list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
                         end
                     end
@@ -241,6 +237,8 @@ local Board = {
         --Set flags according to what they were before the move
         self.data.side = self.data.side * -1
 
+        local to, from = move.to, move.from
+
         for k, v in pairs(move.castle) do
             self.data.castle[k] = v
         end
@@ -248,42 +246,40 @@ local Board = {
         self.data.ep = move.epSq
 
         --Move the  piece back to the square it came from
-        self.pieces[move.from] = self.pieces[move.to]
-        self.colors[move.from] = self.colors[move.to]
+        self.pieces[from] = self.pieces[to]
+        self.colors[from] = self.colors[to]
 
         --Reverting back to a pawn
         if move.promo ~= EMPTY then
-            self.pieces[move.from] = PAWN
+            self.pieces[from] = PAWN
         end
 
         if move.captured ~= EMPTY then
-            self.pieces[move.to] = move.captured
-            self.colors[move.to] = -self.data.side
+            self.pieces[to] = move.captured
+            self.colors[to] = -self.data.side
         else
-            self.pieces[move.to] = EMPTY
-            self.colors[move.to] = EMPTY
+            self.pieces[to] = EMPTY
+            self.colors[to] = EMPTY
         end
 
         --Need to replace en-passant pawns
-        if self.pieces[move.from] == PAWN and move.to == self.data.ep then
-            self.pieces[move.to + self.data.side * 10] = PAWN
-            self.colors[move.to + self.data.side * 10] = -self.data.side
-
-
+        if self.pieces[from] == PAWN and to == self.data.ep then
+            self.pieces[to + self.data.side * 10] = PAWN
+            self.colors[to + self.data.side * 10] = -self.data.side
             --Moving the rook for castling
-        elseif self.pieces[move.from] == KING and math.abs(move.from - move.to) == 2 then
-            if move.to > move.from then
+        elseif self.pieces[from] == KING then
+            if to - from == 2 then
                 --We want the KS rook
-                self.pieces[move.to + 1] = self.pieces[move.to - 1]
-                self.pieces[move.to - 1] = EMPTY
-                self.colors[move.to + 1] = self.colors[move.to - 1]
-                self.colors[move.to - 1] = EMPTY
-            else
+                self.pieces[to + 1] = self.pieces[to - 1]
+                self.pieces[to - 1] = EMPTY
+                self.colors[to + 1] = self.colors[to - 1]
+                self.colors[to - 1] = EMPTY
+            elseif from - to == 2 then
                 --We want the QS rook
-                self.pieces[move.to - 2] = self.pieces[move.to + 1]
-                self.pieces[move.to + 1] = EMPTY
-                self.colors[move.to - 2] = self.colors[move.to + 1]
-                self.colors[move.to + 1] = EMPTY
+                self.pieces[to - 2] = self.pieces[to + 1]
+                self.pieces[to + 1] = EMPTY
+                self.colors[to - 2] = self.colors[to + 1]
+                self.colors[to + 1] = EMPTY
             end
         end
     end,
@@ -298,64 +294,66 @@ local Board = {
         for i, v in ipairs(self.moveList) do
             if not moveEqual(v, move) then goto continue end
 
-            -- Noting some information about the move
-            local pieceType = self.pieces[move.from]
-            local pieceColor = self.colors[move.from]
+            local to, from = move.to, move.from
 
-            local isCapture = self.pieces[move.to] ~= EMPTY
+            -- Noting some information about the move
+            local pieceType = self.pieces[from]
+            local pieceColor = self.colors[from]
+
+            local isCapture = self.pieces[to] ~= EMPTY
 
             -- Make the move on the board
-            self.pieces[move.to] = self.pieces[move.from]
-            self.pieces[move.from] = EMPTY
+            self.pieces[to] = self.pieces[from]
+            self.pieces[from] = EMPTY
 
-            self.colors[move.to] = self.colors[move.from]
-            self.colors[move.from] = EMPTY
+            self.colors[to] = self.colors[from]
+            self.colors[from] = EMPTY
 
-            self.data.side = -1 * self.data.side
+            self.data.side = -self.data.side
 
             --Piece specific move checks
             if pieceType == PAWN then
                 if move.promo ~= EMPTY then
                     --Promotion activation
-                    self.pieces[move.to] = move.promo
-                elseif move.to == self.data.ep then
+                    self.pieces[to] = move.promo
+                elseif to == self.data.ep then
                     -- Remove the captured piece if the move was an EP capture
-                    self.pieces[move.to + 10 * pieceColor] = EMPTY
-                    self.colors[move.to + 10 * pieceColor] = EMPTY
+                    self.pieces[to + 10 * pieceColor] = EMPTY
+                    self.colors[to + 10 * pieceColor] = EMPTY
                 end
             elseif pieceType == KING then
                 --Makes sure castling is valid
-                if math.abs(move.from - move.to) == 2 then
-                    if move.to > move.from then
+                if math.abs(from - to) == 2 then
+                    if to > from then
                         --Make sure the king didn't move through check
-                        if self:isAttacked(move.from + 1) or self:isAttacked(move.from) then
-                            self.pieces[move.from] = self.pieces[move.to]
-                            self.pieces[move.to] = EMPTY
-                            self.colors[move.from] = self.colors[move.to]
-                            self.colors[move.to] = EMPTY
-                            self.data.side = -1 * self.data.side
+                        if self:isAttacked(from + 1) or self:isAttacked(from) then
+                            self.pieces[from] = self.pieces[to]
+                            self.pieces[to] = EMPTY
+                            self.colors[from] = self.colors[to]
+                            self.colors[to] = EMPTY
+                            self.data.side = -self.data.side
                             return false
                         end
                         --We want the KS rook
-                        self.pieces[move.to - 1] = self.pieces[move.to + 1]
-                        self.pieces[move.to + 1] = EMPTY
-                        self.colors[move.to - 1] = self.colors[move.to + 1]
-                        self.colors[move.to + 1] = EMPTY
+                        self.pieces[to - 1] = self.pieces[to + 1]
+                        self.pieces[to + 1] = EMPTY
+                        self.colors[to - 1] = self.colors[to + 1]
+                        self.colors[to + 1] = EMPTY
                     else
                         --Make sure king didn't castle through check
-                        if self:isAttacked(move.from - 1) or self:isAttacked(move.from) then
-                            self.pieces[move.from] = self.pieces[move.to]
-                            self.pieces[move.to] = EMPTY
-                            self.colors[move.from] = self.colors[move.to]
-                            self.colors[move.to] = EMPTY
-                            self.data.side = -1 * self.data.side
+                        if self:isAttacked(from - 1) or self:isAttacked(from) then
+                            self.pieces[from] = self.pieces[to]
+                            self.pieces[to] = EMPTY
+                            self.colors[from] = self.colors[to]
+                            self.colors[to] = EMPTY
+                            self.data.side = -self.data.side
                             return false
                         end
                         --We want the QS rook
-                        self.pieces[move.to + 1] = self.pieces[move.to - 2]
-                        self.pieces[move.to - 2] = EMPTY
-                        self.colors[move.to + 1] = self.colors[move.to - 2]
-                        self.colors[move.to - 2] = EMPTY
+                        self.pieces[to + 1] = self.pieces[to - 2]
+                        self.pieces[to - 2] = EMPTY
+                        self.colors[to + 1] = self.colors[to - 2]
+                        self.colors[to - 2] = EMPTY
                     end
                 end
 
@@ -369,21 +367,21 @@ local Board = {
                 end
             elseif pieceType == ROOK then
                 --Dismantling castle flags for rooks
-                if move.from == 22 then
+                if from == 22 then
                     self.data.castle.bq = false
-                elseif move.from == 29 then
+                elseif from == 29 then
                     self.data.castle.bk = false
-                elseif move.from == 92 then
+                elseif from == 92 then
                     self.data.castle.wq = false
-                elseif move.from == 99 then
+                elseif from == 99 then
                     self.data.castle.wk = false
                 end
             end
 
             --Update EP flags if the move is a double pawn push
-            if pieceType == PAWN and math.abs(move.to - move.from) == 20 then
+            if pieceType == PAWN and math.abs(to - from) == 20 then
                 --Set the en passant flag to the targeted square
-                self.data.ep = move.to + 10 * pieceColor
+                self.data.ep = to + 10 * pieceColor
             else
                 -- Reset the en passant flag
                 self.data.ep = -1

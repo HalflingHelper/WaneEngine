@@ -14,9 +14,7 @@
 
 
 --TODO: Game end states (includes handling movecounts and shit)
-
---TODO: Something better than FEN conversion for taking back moves
-    --Flags I would need: Type of piece captured. If it was EP, State of castle flags for king and rook moves
+--TODO: Repetitions, 50 move rule, end states
 
 require 'util'
 require 'move'
@@ -26,8 +24,7 @@ Board = require 'board'
 
 Board:init()
 -- Use various FEN testing string here
-Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-print(Board:toFEN())
+Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
 
 local st = os.clock()
 print(perft(Board, 4)) 
