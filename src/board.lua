@@ -22,21 +22,24 @@ local Board = {
             self.data[k] = v
         end
 
-        -- TODO: Just copy kv pairs
+        -- TODO: Just copy kv pairs from the thing in data.lua
         self.data.castle = { wq = true, wk = true, bq = true, bk = true }
         -- Initialize the moveList as empty
         self.moveList = {}
     end,
     --[[
         Returns true if square is a valid target for pawn captures
+        Valid squares either contain pieces of the opposing side or are targets for EnPassant
     ]]
     checkPawnCaps = function(self, square)
         return self.pieces[square] ~= INVALID and self.pieces[square] ~= EMPTY and
             self.colors[square] ~= self.data.side
             or self.data.ep == square
     end,
-    --Generates all available pseudo-legal moves in the position for the current color
-    --Returns a move list for testing
+    --[[
+        Generates all available pseudo-legal moves in the position for the current color
+        Returns the board's moveList
+    ]]
     genMoves = function(self)
         local list = {}
         --Iterate over every square on the board
@@ -287,7 +290,7 @@ local Board = {
         Makes the listed move on the board, doesn't check for legality
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
         TODO: This only uses from to, and promo, maybe only add the extra information on the spot to save space until to move is actually made
-            Add on the spot and add to move history
+            Add on the spot and add to a move history array?
     ]]
     makeMove = function(self, move)
         --Make sure that move exists in the move list
@@ -417,6 +420,35 @@ local Board = {
             return false
         end
         return true
+    end,
+    --[[
+        Determines if the game is over, either by 50 move rule, checkmate, stalemate, or repetition
+        Returns true if the game is over, and prints out information about the result
+    ]]
+    checkResult = function(self)
+        local canMove = false
+
+        for i, move in ipairs(self.moveList) do
+            if self:makeLegalMove(move) then
+                canMove = true
+                break
+            end
+        end
+        if not canMove then
+            if self:inCheck() then
+                --Check for the side
+                print("Someone wins!")
+            else
+                --Stalemate
+                print("Draw by stalemate")
+            end
+            return true
+        elseif self.data.fiftyMoveRule >= 100 then
+            print("Draw by the fifty move rule.")
+            return true
+        else --TODO: repetition
+        end
+
     end,
     -- Returns the FEN string representation of the board
     toFEN = function(self)
