@@ -100,5 +100,6 @@ initBoardData = {
     castle         = { wq = true, wk = true, bq = true, bk = true },
     side           = WHITE, -- White goes first
     fiftyMoveCount = 0,
-    fullMoves      = 1
+    fullMoves      = 1,
+    hist           = {}     -- Table of tables for each section of the fifty move rule
 }

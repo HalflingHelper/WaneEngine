@@ -24,6 +24,7 @@ local Board = {
 
         -- TODO: Just copy kv pairs from the thing in data.lua
         self.data.castle = { wq = true, wk = true, bq = true, bk = true }
+        self.data.hist = {}
         -- Initialize the moveList as empty
         self.moveList = {}
     end,
@@ -393,6 +394,8 @@ local Board = {
             --Update 50 move counter
             if pieceType == PAWN or isCapture then
                 self.data.fiftyMoveRule = 0
+                --Add a new partition to the history list
+                self.data.hist[#self.data.hist+1] = {}
             end
 
             self.data.fiftyMoveRule = self.data.fiftyMoveRule + 1
@@ -448,8 +451,14 @@ local Board = {
             return true
         else --TODO: repetition
         end
+    end,
+
+    --Returns the number of times that the current position has been repeated
+    reps = function()
 
     end,
+
+
     -- Returns the FEN string representation of the board
     toFEN = function(self)
         local fen = ""
