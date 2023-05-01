@@ -286,6 +286,12 @@ local Board = {
                 self.colors[to + 1] = EMPTY
             end
         end
+
+        -- Takeback the hash
+        table.remove(self.data.hash[#self.data.hash])
+        if #self.data.hash[#self.data.hash] == 0 then
+            table.remove(self.data.hash)
+        end
     end,
     --[[
         Makes the listed move on the board, doesn't check for legality
@@ -403,6 +409,9 @@ local Board = {
             -- If current side is white black just moved
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
+            table.insert(self.data.hist[#self.data.hist], get_hash(self))
+
+            --Wrapping the return in a do while so that lua doesn't scream
             do return true end
 
             ::continue::
@@ -454,8 +463,13 @@ local Board = {
     end,
 
     --Returns the number of times that the current position has been repeated
-    reps = function()
-
+    reps = function(self)
+        local curHash = self.data.hash[#self.data.hash][#self.data.hash[#self.data.hash]]
+        local count = 0
+        for i, hash in ipairs(self.data.hash[#self.data.hash]) do
+            if hash == curHash then count = count + 1 end
+        end
+        return count
     end,
 
 
