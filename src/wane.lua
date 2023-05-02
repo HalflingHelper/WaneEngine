@@ -19,15 +19,17 @@
 require 'util'
 require 'move'
 require 'test'
+require 'hash'
 
 Board = require 'board'
+init_hash()
 
 Board:init()
 -- Use various FEN testing string here
 --Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
 
 local st = os.clock()
---print(perft(Board, 4)) 
+---print(perft(Board, 4)) 
 local et = os.clock()
 
 print(et - st)
@@ -35,6 +37,7 @@ print(et - st)
 -- Core loop of the engine
 while true do
     Board:genMoves()
+    Board:checkResult()
 
     local m
 
@@ -45,9 +48,10 @@ while true do
         if (not status) then print(err) end
     until (status == true)
 
-    if (not Board:makeMove(m)) then
+    if (not Board:makeLegalMove(m)) then
         print("Illegal move.")
     else
         Board:print()
     end
+
 end

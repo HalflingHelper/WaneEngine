@@ -2,6 +2,7 @@
 require 'util'
 require 'data'
 require 'move'
+require 'hash'
 
 -- The Main Board Class
 local Board = {
@@ -17,14 +18,14 @@ local Board = {
             self.pieces[i] = initPieces[i]
             self.colors[i] = initColors[i]
         end
-        -- Data for ep, fiftyMoveRule, etc.
+        -- Data for ep, fiftyMoveCount, etc.
         for k, v in pairs(initBoardData) do
             self.data[k] = v
         end
 
         -- TODO: Just copy kv pairs from the thing in data.lua
         self.data.castle = { wq = true, wk = true, bq = true, bk = true }
-        self.data.hist = {}
+        self.data.hash = {{}} --Initialzing hist with the first partition already
         -- Initialize the moveList as empty
         self.moveList = {}
     end,
@@ -157,6 +158,7 @@ local Board = {
         end
 
         self.moveList = list
+
         return list
     end,
     --[[
@@ -289,7 +291,7 @@ local Board = {
 
         -- Takeback the hash
         table.remove(self.data.hash[#self.data.hash])
-        if #self.data.hash[#self.data.hash] == 0 then
+        if #self.data.hash[#self.data.hash] == 0 and #self.data.hash > 1 then
             table.remove(self.data.hash)
         end
     end,
@@ -319,7 +321,7 @@ local Board = {
             self.colors[to] = self.colors[from]
             self.colors[from] = EMPTY
 
-            self.data.side = -self.data.side
+            self.data.side = -1 * self.data.side
 
             --Piece specific move checks
             if pieceType == PAWN then
@@ -341,7 +343,7 @@ local Board = {
                             self.pieces[to] = EMPTY
                             self.colors[from] = self.colors[to]
                             self.colors[to] = EMPTY
-                            self.data.side = -self.data.side
+                            self.data.side = -1 * self.data.side
                             return false
                         end
                         --We want the KS rook
@@ -356,7 +358,7 @@ local Board = {
                             self.pieces[to] = EMPTY
                             self.colors[from] = self.colors[to]
                             self.colors[to] = EMPTY
-                            self.data.side = -self.data.side
+                            self.data.side = -1 * self.data.side
                             return false
                         end
                         --We want the QS rook
@@ -399,17 +401,17 @@ local Board = {
 
             --Update 50 move counter
             if pieceType == PAWN or isCapture then
-                self.data.fiftyMoveRule = 0
+                self.data.fiftyMoveCount = 0
                 --Add a new partition to the history list
-                self.data.hist[#self.data.hist+1] = {}
+                self.data.hash[#self.data.hash+1] = {}
             end
 
-            self.data.fiftyMoveRule = self.data.fiftyMoveRule + 1
+            self.data.fiftyMoveCount = self.data.fiftyMoveCount + 1
 
             -- If current side is white black just moved
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
-            table.insert(self.data.hist[#self.data.hist], get_hash(self))
+            table.insert(self.data.hash[#self.data.hash], get_hash(self))
 
             --Wrapping the return in a do while so that lua doesn't scream
             do return true end
@@ -443,6 +445,7 @@ local Board = {
         for i, move in ipairs(self.moveList) do
             if self:makeLegalMove(move) then
                 canMove = true
+                self:takebackMove(move)
                 break
             end
         end
@@ -455,11 +458,14 @@ local Board = {
                 print("Draw by stalemate")
             end
             return true
-        elseif self.data.fiftyMoveRule >= 100 then
+        elseif self.data.fiftyMoveCount >= 100 then
             print("Draw by the fifty move rule.")
             return true
-        else --TODO: repetition
+        elseif self:reps() >= 3 then --TODO: repetition
+            print("Draw by threefold repetition.")
+            return true
         end
+        return false
     end,
 
     --Returns the number of times that the current position has been repeated
@@ -541,7 +547,7 @@ local Board = {
     fromFEN = function(self, fen)
         self.data.castle = { wk = false, wq = false, bk = false, bq = false }
         self.data.ep = -1
-        self.data.fiftyMoveRule = 0
+        self.data.fiftyMoveCount = 0
 
         local stage = 0
         local sqIndex = 22
