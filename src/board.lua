@@ -25,7 +25,7 @@ local Board = {
 
         -- TODO: Just copy kv pairs from the thing in data.lua
         self.data.castle = { wq = true, wk = true, bq = true, bk = true }
-        self.data.hash = {{}} --Initialzing hist with the first partition already
+        self.data.hash = { {} } --Initialzing hist with the first partition already
         -- Initialize the moveList as empty
         self.moveList = {}
     end,
@@ -403,7 +403,7 @@ local Board = {
             if pieceType == PAWN or isCapture then
                 self.data.fiftyMoveCount = 0
                 --Add a new partition to the history list
-                self.data.hash[#self.data.hash+1] = {}
+                self.data.hash[#self.data.hash + 1] = {}
             end
 
             self.data.fiftyMoveCount = self.data.fiftyMoveCount + 1
@@ -450,18 +450,21 @@ local Board = {
             end
         end
         if not canMove then
+            self.data.side = -1 * self.data.side
             if self:inCheck() then
                 --Check for the side
-                print("Someone wins!")
+                local winner = self.side == WHITE and "White" or "Black"
+                print(winner .. " wins by checkmate.")
             else
                 --Stalemate
-                print("Draw by stalemate")
+                print("Draw by stalemate.")
             end
+            self.data.side = -1 * self.data.side
             return true
         elseif self.data.fiftyMoveCount >= 100 then
             print("Draw by the fifty move rule.")
             return true
-        elseif self:reps() >= 3 then --TODO: repetition
+        elseif self:reps() >= 3 then
             print("Draw by threefold repetition.")
             return true
         end

@@ -13,8 +13,7 @@
 ]]
 
 
---TODO: Game end states (includes handling movecounts and shit)
---TODO: Repetitions, 50 move rule, end states
+--TODO: 50 move rule, end states
 
 require 'util'
 require 'move'
@@ -28,11 +27,12 @@ Board:init()
 -- Use various FEN testing string here
 --Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
 
+local testDepth = 4
 local st = os.clock()
----print(perft(Board, 4)) 
+---print(perft(Board, testDepth)) 
 local et = os.clock()
 
-print(et - st)
+print("Benchmark for depth " .. testDepth .. et - st)
 
 -- Core loop of the engine
 while true do

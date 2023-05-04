@@ -31,7 +31,7 @@ local function isValidFile(f)
     return f >= 1 and f <= 8
 end
 
--- Parses a move in Long Algebraic notaion from the string to a move table
+-- Parses a move in Long Algebraic Notaion from the string to a move table
 -- Expects two squares in algebraic notation
 -- ex: e2e4
 function parseMove(s)
