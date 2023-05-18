@@ -18,6 +18,16 @@ CASTLE_FLAG = 1
 CAPTURE_FLAG = 2
 EP_FLAG = 3
 
+-- Point values
+pieceValue = {
+    [PAWN] = 1,
+    [KNIGHT] = 2.5,
+    [BISHOP] = 3.5,
+    [ROOK] = 5,
+    [QUEEN] = 9,
+    [KING] = 0, --King is ignored
+}
+
 -- Char codes used for drawing to the output display
 pieceCharCodes = {
     [EMPTY] = '.',

@@ -423,6 +423,18 @@ local Board = {
         return false
     end,
     --[[
+        Evaluates the position on the board. Currently Purely materialistic
+    ]]
+    eval = function(self)
+        local e = 0
+        for i, p in ipairs(self.pieces) do
+            if p ~= EMPTY and p ~= INVALID then
+                e = e + pieceValue[p] * self.colors[i]
+            end
+        end
+        return e
+    end,
+    --[[
         Makes the listed move on the board
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
     ]]
