@@ -19,6 +19,7 @@ require 'util'
 require 'move'
 require 'test'
 require 'hash'
+require 'search'
 
 Board = require 'board'
 init_hash()
@@ -26,12 +27,16 @@ init_hash()
 Board:init()
 -- Use various FEN testing string here
 --Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
-local testDepth = 4
+local testDepth = 5
 local st = os.clock()
----print(perft(Board, testDepth)) 
+print(perft(Board, testDepth)) 
 local et = os.clock()
+print("Perft benchmark for depth " .. testDepth .. ": " .. et - st)
 
-print("Benchmark for depth " .. testDepth .. ": " .. et - st)
+local st = os.clock()
+print(search(Board, -100000, 1000000, testDepth))
+local et = os.clock()
+print("Seach benchmark for depth " .. testDepth .. ": " .. et - st)
 
 -- Core loop of the engine
 while true do

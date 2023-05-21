@@ -1,15 +1,22 @@
 -- Negamax with alpha-beta pruning!
 -- https://en.wikipedia.org/wiki/Negamax
 
-function search(Board, alpha, beta, depth)
-    if depth == 0 then return Board:eval() end
+--[[
+    Search Function
+    Returns the evaluation of the position and the best move
+    Returns the best move in the position. If there are no legal moves, returns nil
+    If debug is true, then prints the line
+]]
+function search(board, alpha, beta, depth, debug)
+    if depth == 0 then return board:eval() end
 
-    local moveList = Board:genMoves()
+    local moveList = board:genMoves()
+    local best = nil
 
     for i, move in ipairs(moveList) do
-        if Board:makeLegalMove(move) then
-            local score = -search(Board, -alpha, -beta, depth - 1)
-            Board:takebackMove(move)
+        if board:makeMove(move) then
+            local score = -search(board, -beta, -alpha, depth - 1, debug)
+            board:takebackMove(move)
 
             if score >= beta then
                 return beta
@@ -17,9 +24,14 @@ function search(Board, alpha, beta, depth)
 
             if score > alpha then
                 alpha = score
+                best = move
             end
+            --Reset the move list to what it was before the move
+            board.moveList = moveList
         end
     end
-    
-    return alpha
+
+    if debug and best then printMove(best) end
+
+    return alpha, best
 end
