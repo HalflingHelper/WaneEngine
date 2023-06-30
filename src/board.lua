@@ -23,8 +23,9 @@ local Board = {
             self.data[k] = v
         end
 
-        -- TODO: Just copy kv pairs from the thing in data.lua
-        self.data.castle = { wq = true, wk = true, bq = true, bk = true }
+        for k, v in pairs(initBoardData.castle) do
+            self.data.castle[k] = v
+        end
         self.data.hash = { {} } --Initialzing hist with the first partition already
         -- Initialize the moveList as empty
         self.moveList = {}
@@ -38,6 +39,19 @@ local Board = {
             self.colors[square] ~= self.data.side
             or self.data.ep == square
     end,
+
+    --Adds pawn moves to the list
+    genPawnMove = function(self, from, to, promo, list)
+        if promo then
+            for type = KNIGHT, QUEEN do
+                list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep,
+                    type)
+            end
+        else
+            list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep)
+        end
+    end,
+
     --[[
         Generates all available pseudo-legal moves in the position for the current color
         Returns the board's moveList
@@ -45,116 +59,94 @@ local Board = {
     genMoves = function(self)
         local list = {}
         --Iterate over every square on the board
+        local s = self.data.side
         for i, piece in ipairs(self.pieces) do
             --If the piece is the correct color
-            if self.colors[i] ~= self.data.side then goto continue end
+            if self.colors[i] == s then
+                if piece == PAWN then
+                    -- Pawn Moves are specifies
+                    local pawnDist = -10 * s
+                    local rank = getRank(i)
+                    local to = i + pawnDist
 
-            --TODO: Lots of repetition in generating pawn moves
-            if piece == PAWN then
-                -- Pawn Moves are specifies
-                local pawnDist = 10
-                local rank = getRank(i)
-                local to = i - self.data.side * pawnDist
+                    local isPromo = (s == WHITE and rank == 7) or
+                        (s == BLACK and rank == 2)
 
-                local isPromo = (self.data.side == WHITE and rank == 7) or
-                    (self.data.side == BLACK and rank == 2)
-
-                -- Check pushes
-                if self.pieces[to] == EMPTY then
-                    -- Normal push
-                    if isPromo then
-                        for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep, type)
-                        end
-                    else
-                        list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
-                    end
-                    --Double push
-                    if (self.data.side == WHITE and rank == 2) or (self.data.side == BLACK and rank == 7) then
-                        if self.pieces[to - pawnDist * self.data.side] == EMPTY then
-                            list[#list + 1] = move(i, to - pawnDist * self.data.side, self.data.castle, EMPTY,
-                                self.data.ep)
-                        end
-                    end
-                end
-
-                -- Check Captures in both directions
-                if self:checkPawnCaps(to + 1) then
-                    if isPromo then
-                        for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], self.data.ep,
-                                type)
-                        end
-                    else
-                        list[#list + 1] = move(i, to + 1, self.data.castle, self.pieces[to + 1], self.data.ep)
-                    end
-                end
-                if self:checkPawnCaps(to - 1) then
-                    if isPromo then
-                        for type = KNIGHT, QUEEN do
-                            list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], self.data.ep,
-                                type)
-                        end
-                    else
-                        list[#list + 1] = move(i, to - 1, self.data.castle, self.pieces[to - 1], self.data.ep)
-                    end
-                end
-            elseif piece == KING then
-                -- Castling moves and king moves
-                for j, dir in ipairs(offset[piece]) do
-                    --Normal King moves
-                    if self.pieces[i + dir] == EMPTY or (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= self.data.side) then
-                        list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
-                    end
-                end
-
-                local c = self.data.castle
-
-                --Queenside castling
-                if self.data.side == WHITE and c.wq or self.data.side == BLACK and c.bq then
-                    -- Check and add QC move
-                    if self.pieces[i - 3] == EMPTY and self.pieces[i - 2] == EMPTY and self.pieces[i - 1] == EMPTY and self.pieces[i - 4] == ROOK then
-                        list[#list + 1] = move(i, i - 2, self.data.castle, EMPTY, self.data.ep)
-                    end
-                end
-
-                --Kingside castling
-                if self.data.side == WHITE and c.wk or self.data.side == BLACK and c.bk then
-                    -- Check and add KC move
-                    if self.pieces[i + 2] == EMPTY and self.pieces[i + 1] == EMPTY and self.pieces[i + 3] == ROOK then
-                        list[#list + 1] = move(i, i + 2, self.data.castle, EMPTY, self.data.ep)
-                    end
-                end
-            else
-                -- All other piece moves
-                if slide[piece] then
-                    -- Bishops, Rooks, Queens
-                    for j, dir in ipairs(offset[piece]) do
-                        for dist = 1, 7 do
-                            local to = i + dist * dir
-                            if self.pieces[to] == EMPTY then
-                                list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
-                            elseif self.pieces[to] == INVALID or self.colors[to] == self.data.side then
-                                -- We run into an allied piece or the edge of the board
-                                break
-                            else
-                                -- We're capturing a piece and there aren't any more moves
-                                list[#list + 1] = move(i, to, self.data.castle, self.pieces[to], self.data.ep)
-                                break
+                    -- Check pushes
+                    if self.pieces[to] == EMPTY then
+                        -- Normal push
+                        self:genPawnMove(i, to, isPromo, list)
+                        --Double push
+                        if (s == WHITE and rank == 2) or (s == BLACK and rank == 7) then
+                            if self.pieces[to + pawnDist] == EMPTY then
+                                list[#list + 1] = move(i, to + pawnDist, self.data.castle, EMPTY,
+                                    self.data.ep)
                             end
                         end
                     end
-                else
-                    --Horses
+
+                    -- Check Captures in both directions
+                    if self:checkPawnCaps(to + 1) then
+                        self:genPawnMove(i, to + 1, isPromo, list)
+                    end
+                    if self:checkPawnCaps(to - 1) then
+                        self:genPawnMove(i, to - 1, isPromo, list)
+                    end
+                elseif piece == KING then
+                    -- Castling moves and king moves
                     for j, dir in ipairs(offset[piece]) do
-                        if (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= self.data.side) then
+                        --Normal King moves
+                        if self.pieces[i + dir] == EMPTY or (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
                             list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                        end
+                    end
+
+                    local c = self.data.castle
+
+                    --Queenside castling
+                    if s == WHITE and c.wq or s == BLACK and c.bq then
+                        -- Check and add QC move
+                        if self.pieces[i - 3] == EMPTY and self.pieces[i - 2] == EMPTY and self.pieces[i - 1] == EMPTY and self.pieces[i - 4] == ROOK then
+                            list[#list + 1] = move(i, i - 2, self.data.castle, EMPTY, self.data.ep)
+                        end
+                    end
+
+                    --Kingside castling
+                    if s == WHITE and c.wk or s == BLACK and c.bk then
+                        -- Check and add KC move
+                        if self.pieces[i + 2] == EMPTY and self.pieces[i + 1] == EMPTY and self.pieces[i + 3] == ROOK then
+                            list[#list + 1] = move(i, i + 2, self.data.castle, EMPTY, self.data.ep)
+                        end
+                    end
+                else
+                    -- All other piece moves
+                    if slide[piece] then
+                        -- Bishops, Rooks, Queens
+                        for j, dir in ipairs(offset[piece]) do
+                            for dist = 1, 7 do
+                                local to = i + dist * dir
+                                if self.pieces[to] == EMPTY then
+                                    list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
+                                elseif self.pieces[to] == INVALID or self.colors[to] == s then
+                                    -- We run into an allied piece or the edge of the board
+                                    break
+                                else
+                                    -- We're capturing a piece and there aren't any more moves
+                                    list[#list + 1] = move(i, to, self.data.castle, self.pieces[to], self.data.ep)
+                                    break
+                                end
+                            end
+                        end
+                    else
+                        --Horses
+                        for j, dir in ipairs(offset[piece]) do
+                            if (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
+                                list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                            end
                         end
                     end
                 end
             end
-
-            ::continue::
         end
 
         self.moveList = list
@@ -437,12 +429,11 @@ local Board = {
         end
 
         --Control over central squares, where pawns are weighted higher
-        for i, v in ipairs({55, 56, 65, 66}) do
-            --Pawns in the center            
+        for i, v in ipairs({ 55, 56, 65, 66 }) do
+            --Pawns in the center
             if self.pieces[v] == PAWN then
                 centerScore = centerScore + self.colors[v] * 200
             end
-
         end
 
         return materialCount + centerScore
