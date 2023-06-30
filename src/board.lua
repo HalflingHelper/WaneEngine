@@ -426,13 +426,26 @@ local Board = {
         Evaluates the position on the board. Currently Purely materialistic
     ]]
     eval = function(self)
-        local e = 0
+        local materialCount = 0
+        local centerScore = 0
+
+        local pawnScore = 0
         for i, p in ipairs(self.pieces) do
             if p ~= EMPTY and p ~= INVALID then
-                e = e + pieceValue[p] * self.colors[i]
+                materialCount = materialCount + pieceValue[p] * self.colors[i]
             end
         end
-        return e
+
+        --Control over central squares, where pawns are weighted higher
+        for i, v in ipairs({55, 56, 65, 66}) do
+            --Pawns in the center            
+            if self.pieces[v] == PAWN then
+                centerScore = centerScore + self.colors[v] * 200
+            end
+
+        end
+
+        return materialCount + centerScore
     end,
     --[[
         Makes the listed move on the board

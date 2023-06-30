@@ -1,6 +1,9 @@
 -- Negamax with alpha-beta pruning!
 -- https://en.wikipedia.org/wiki/Negamax
 
+--Maybe change from a negamax to just and ABMax and AB min function, with search as an entry point that just takes board, side, and debug as arguments.
+
+
 --[[
     Search Function
     Returns the evaluation of the position and the best move

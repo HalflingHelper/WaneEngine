@@ -29,33 +29,44 @@ Board:init()
 --Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -")
 local testDepth = 5
 local st = os.clock()
-print(perft(Board, testDepth)) 
+--print(perft(Board, testDepth))
 local et = os.clock()
 print("Perft benchmark for depth " .. testDepth .. ": " .. et - st)
 
 local st = os.clock()
-print(search(Board, -100000, 1000000, testDepth))
+print(search(Board, -100000, 100000, testDepth, true))
 local et = os.clock()
-print("Seach benchmark for depth " .. testDepth .. ": " .. et - st)
+print("Search benchmark for depth " .. testDepth .. ": " .. et - st)
+
+--Setting up player information.
+local comp_side = BLACK
+local side = WHITE
 
 -- Core loop of the engine
 while true do
     Board:genMoves()
     Board:checkResult()
 
-    local m
+    local alpha, m
 
-    repeat 
-        local s = io.read()
-        local status, err = pcall(function() m = parseMove(s) end)
+    if side == comp_side then
+        --No functionality for search timeout
+        alpha, m = search(Board, -100000, 100000, 5)
+        alpha = side*alpha
+        print("Eval", alpha)
+    else
+        repeat
+            local s = io.read()
+            local status, err = pcall(function() m = parseMove(s) end)
 
-        if (not status) then print(err) end
-    until (status == true)
+            if (not status) then print(err) end
+        until (status == true)
+    end
 
     if (not Board:makeLegalMove(m)) then
         print("Illegal move.")
     else
         Board:print()
+        side = -side
     end
-
 end
