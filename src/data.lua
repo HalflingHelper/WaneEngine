@@ -20,11 +20,11 @@ EP_FLAG = 3
 
 -- Point values
 pieceValue = {
-    [PAWN] = 1,
-    [KNIGHT] = 2.5,
-    [BISHOP] = 3.5,
-    [ROOK] = 5,
-    [QUEEN] = 9,
+    [PAWN] = 100,
+    [KNIGHT] = 250,
+    [BISHOP] = 350,
+    [ROOK] = 500,
+    [QUEEN] = 900,
     [KING] = 0, --King is ignored
 }
 

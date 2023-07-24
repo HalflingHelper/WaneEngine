@@ -44,11 +44,15 @@ local Board = {
     genPawnMove = function(self, from, to, promo, list)
         if promo then
             for type = KNIGHT, QUEEN do
-                list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep,
-                    type)
+                --Promos at the beginning of the list
+                table.insert(list, 1, move(from, to, self.data.castle, self.pieces[to], self.data.ep, type))
             end
         else
-            list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep)
+            if self.colors[to] ~= EMPTY then
+                table.insert(list, 1, move(from, to, self.data.castle, self.pieces[to], self.data.ep))                
+            else
+                list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep)
+            end
         end
     end,
 
@@ -96,8 +100,11 @@ local Board = {
                     -- Castling moves and king moves
                     for j, dir in ipairs(offset[piece]) do
                         --Normal King moves
-                        if self.pieces[i + dir] == EMPTY or (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
+                        if self.pieces[i + dir] == EMPTY then
                             list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                            
+                        elseif (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
+                            table.insert(list, 1, move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep))
                         end
                     end
 
@@ -132,7 +139,7 @@ local Board = {
                                     break
                                 else
                                     -- We're capturing a piece and there aren't any more moves
-                                    list[#list + 1] = move(i, to, self.data.castle, self.pieces[to], self.data.ep)
+                                    table.insert(list, 1, move(i, to, self.data.castle, self.pieces[to], self.data.ep))
                                     break
                                 end
                             end
@@ -140,8 +147,10 @@ local Board = {
                     else
                         --Horses
                         for j, dir in ipairs(offset[piece]) do
-                            if (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
+                            if self.colors[i + dir] == EMPTY then
                                 list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                            elseif self.colors[i+dir] == -s then
+                                table.insert(list, 1, move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep))
                             end
                         end
                     end
