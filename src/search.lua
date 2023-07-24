@@ -3,24 +3,29 @@
 
 --TODO: Quiescence instead of just calling the eval function
 
+-- Variables for tracking search timing
+local start
+local nodes
+local MAX_SEARCH_TIME = 4
 --[[ SearchRoot Function
     Searches the root node and returns the evaluation and the best move
     TODO: Iterative deepening
 ]]
 function searchRoot(board, debug)
-    local et = 0
-    local start = os.clock()
+    start = os.clock()
+    nodes = 0
 
     local alpha, best
 
-    --for i = 1, 100 do
-        alpha, best = negamax(board, -math.huge, math.huge, 5)
-    local et = os.clock()
-    print("Elapsed search time", et - start)
-        --if os.clock() - start > 5 then
+    for i = 1, 100 do
+        local val, b = negamax(board, -math.huge, math.huge, i)
+        if val == 'a' then
             return alpha, best
-       -- end
-   -- end
+        end
+        alpha, best = val, b
+   end
+
+   return alpha, best
 end
 
 
@@ -38,8 +43,14 @@ function negamax(board, alpha, beta, depth, debug)
 
     for i, move in ipairs(moveList) do
         if board:makeLegalMove(move) then
-            local score = -negamax(board, -beta, -alpha, depth - 1, debug)
+            local score = negamax(board, -beta, -alpha, depth - 1, debug)
+            --Reset the move list to what it was before the move
             board:takebackMove(move)
+            board.moveList = moveList
+           
+            if score == 'a' then return score, nil end
+            score = -score
+
 
             if score >= beta then
                 return beta
@@ -49,8 +60,10 @@ function negamax(board, alpha, beta, depth, debug)
                 alpha = score
                 best = move
             end
-            --Reset the move list to what it was before the move
-            board.moveList = moveList
+        end
+        nodes = (nodes + 1) % 1024
+        if nodes == 0 and os.clock() - start > MAX_SEARCH_TIME then
+            return 'a', nil
         end
     end
 

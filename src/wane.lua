@@ -39,7 +39,7 @@ local et = os.clock()
 -- print("Search benchmark for depth " .. testDepth .. ": " .. et - st)
 
 --Setting up player information.
-local comp_side = BLACK
+local comp_side = WHITE
 local side = WHITE
 
 -- Core loop of the engine
