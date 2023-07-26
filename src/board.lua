@@ -10,6 +10,8 @@ local Board = {
     pieces = {},
     colors = {},
     data = {},
+    hist = {},
+    hash = {},
     moveList = {},
     --Sets the board and flags in their initial states
     init = function(self)
@@ -26,7 +28,7 @@ local Board = {
         for k, v in pairs(initBoardData.castle) do
             self.data.castle[k] = v
         end
-        self.data.hash = { {} } --Initialzing hist with the first partition already
+        self.hash = { {} } --Initialzing hist with the first partition already
         -- Initialize the moveList as empty
         self.moveList = {}
     end,
@@ -45,13 +47,13 @@ local Board = {
         if promo then
             for type = KNIGHT, QUEEN do
                 --Promos at the beginning of the list
-                table.insert(list, 1, move(from, to, self.data.castle, self.pieces[to], self.data.ep, type))
+                table.insert(list, 1, move(from, to, self.pieces[to], type))
             end
         else
             if self.colors[to] ~= EMPTY then
-                table.insert(list, 1, move(from, to, self.data.castle, self.pieces[to], self.data.ep))                
+                table.insert(list, 1, move(from, to, self.pieces[to]))                
             else
-                list[#list + 1] = move(from, to, self.data.castle, self.pieces[to], self.data.ep)
+                list[#list + 1] = move(from, to, self.pieces[to])
             end
         end
     end,
@@ -64,7 +66,9 @@ local Board = {
         local list = {}
         --Iterate over every square on the board
         local s = self.data.side
-        for i, piece in ipairs(self.pieces) do
+        for i = 22, 99 do
+        --for i, piece in ipairs(self.pieces) do
+            local piece = self.pieces[i]
             --If the piece is the correct color
             if self.colors[i] == s then
                 if piece == PAWN then
@@ -83,8 +87,7 @@ local Board = {
                         --Double push
                         if (s == WHITE and rank == 2) or (s == BLACK and rank == 7) then
                             if self.pieces[to + pawnDist] == EMPTY then
-                                list[#list + 1] = move(i, to + pawnDist, self.data.castle, EMPTY,
-                                    self.data.ep)
+                                list[#list + 1] = move(i, to + pawnDist)
                             end
                         end
                     end
@@ -101,10 +104,10 @@ local Board = {
                     for j, dir in ipairs(offset[piece]) do
                         --Normal King moves
                         if self.pieces[i + dir] == EMPTY then
-                            list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                            list[#list + 1] = move(i, i + dir)
                             
                         elseif (self.pieces[i + dir] ~= INVALID and self.colors[i + dir] ~= s) then
-                            table.insert(list, 1, move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep))
+                            table.insert(list, 1, move(i, i + dir, self.pieces[i + dir]))
                         end
                     end
 
@@ -114,7 +117,7 @@ local Board = {
                     if s == WHITE and c.wq or s == BLACK and c.bq then
                         -- Check and add QC move
                         if self.pieces[i - 3] == EMPTY and self.pieces[i - 2] == EMPTY and self.pieces[i - 1] == EMPTY and self.pieces[i - 4] == ROOK then
-                            list[#list + 1] = move(i, i - 2, self.data.castle, EMPTY, self.data.ep)
+                            list[#list + 1] = move(i, i - 2)
                         end
                     end
 
@@ -122,7 +125,7 @@ local Board = {
                     if s == WHITE and c.wk or s == BLACK and c.bk then
                         -- Check and add KC move
                         if self.pieces[i + 2] == EMPTY and self.pieces[i + 1] == EMPTY and self.pieces[i + 3] == ROOK then
-                            list[#list + 1] = move(i, i + 2, self.data.castle, EMPTY, self.data.ep)
+                            list[#list + 1] = move(i, i + 2)
                         end
                     end
                 else
@@ -133,13 +136,13 @@ local Board = {
                             for dist = 1, 7 do
                                 local to = i + dist * dir
                                 if self.pieces[to] == EMPTY then
-                                    list[#list + 1] = move(i, to, self.data.castle, EMPTY, self.data.ep)
+                                    list[#list + 1] = move(i, to)
                                 elseif self.pieces[to] == INVALID or self.colors[to] == s then
                                     -- We run into an allied piece or the edge of the board
                                     break
                                 else
                                     -- We're capturing a piece and there aren't any more moves
-                                    table.insert(list, 1, move(i, to, self.data.castle, self.pieces[to], self.data.ep))
+                                    table.insert(list, 1, move(i, to, self.pieces[to]))
                                     break
                                 end
                             end
@@ -148,9 +151,9 @@ local Board = {
                         --Horses
                         for j, dir in ipairs(offset[piece]) do
                             if self.colors[i + dir] == EMPTY then
-                                list[#list + 1] = move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep)
+                                list[#list + 1] = move(i, i + dir, self.pieces[i + dir])
                             elseif self.colors[i+dir] == -s then
-                                table.insert(list, 1, move(i, i + dir, self.data.castle, self.pieces[i + dir], self.data.ep))
+                                table.insert(list, 1, move(i, i + dir, self.pieces[i + dir]))
                             end
                         end
                     end
@@ -242,16 +245,9 @@ local Board = {
     -- Blindly assumes that move was the last move made, this could create issues
     takebackMove = function(self, move)
         --Set flags according to what they were before the move
-        self.data.side = self.data.side * -1
+        self.data = table.remove(self.hist)
 
-        local to, from = move.to, move.from
-
-        for k, v in pairs(move.castle) do
-            self.data.castle[k] = v
-        end
-
-        self.data.ep = move.epSq
-
+        local from, to = move.from, move.to
         --Move the  piece back to the square it came from
         self.pieces[from] = self.pieces[to]
         self.colors[from] = self.colors[to]
@@ -291,9 +287,9 @@ local Board = {
         end
 
         -- Takeback the hash
-        table.remove(self.data.hash[#self.data.hash])
-        if #self.data.hash[#self.data.hash] == 0 and #self.data.hash > 1 then
-            table.remove(self.data.hash)
+        table.remove(self.hash[#self.hash])
+        if #(self.hash[#self.hash]) == 0 and #self.hash > 1 then
+            table.remove(self.hash)
         end
     end,
     --[[
@@ -306,6 +302,14 @@ local Board = {
         --Make sure that move exists in the move list
         for i, v in ipairs(self.moveList) do
             if not moveEqual(v, move) then goto continue end
+
+            local newdata = {
+                ep             = -1,    -- En Passant is set to the index of the potential targeted square
+                side           = self.data.side * -1, -- White goes first
+                castle         = { wq = self.data.wq, wk = self.data.wk, bq = self.data.bq, bk = self.data.bk },
+                fiftyMoveCount = self.data.fiftyMoveCount,
+                fullMoves      = self.data.fullMoves,
+            }
 
             local to, from = move.to, move.from
 
@@ -335,7 +339,7 @@ local Board = {
                     self.colors[to + 10 * pieceColor] = EMPTY
                 end
             elseif pieceType == KING then
-                --Makes sure castling is valid
+                --Castling, returns false if castle through check.
                 if math.abs(from - to) == 2 then
                     if to > from then
                         --Make sure the king didn't move through check
@@ -372,48 +376,52 @@ local Board = {
 
                 -- Removes castle flags
                 if pieceColor == BLACK then
-                    self.data.castle.bq = false
-                    self.data.castle.bk = false
+                    newdata.castle.bq = false
+                    newdata.castle.bk = false
                 else
-                    self.data.castle.wq = false
-                    self.data.castle.wk = false
+                    newdata.castle.wq = false
+                    newdata.castle.wk = false
                 end
             elseif pieceType == ROOK then
                 --Dismantling castle flags for rooks
                 if from == 22 then
-                    self.data.castle.bq = false
+                    newdata.castle.bq = false
                 elseif from == 29 then
-                    self.data.castle.bk = false
+                    newdata.castle.bk = false
                 elseif from == 92 then
-                    self.data.castle.wq = false
+                    newdata.castle.wq = false
                 elseif from == 99 then
-                    self.data.castle.wk = false
+                    newdata.castle.wk = false
                 end
             end
+
 
             --Update EP flags if the move is a double pawn push
             if pieceType == PAWN and math.abs(to - from) == 20 then
                 --Set the en passant flag to the targeted square
-                self.data.ep = to + 10 * pieceColor
+                newdata.ep = to + 10 * pieceColor
             else
                 -- Reset the en passant flag
-                self.data.ep = -1
+                newdata.ep = -1
             end
 
             --Update 50 move counter
             if pieceType == PAWN or isCapture then
-                self.data.fiftyMoveCount = 0
+                newdata.fiftyMoveCount = 0
                 --Add a new partition to the history list
-                self.data.hash[#self.data.hash + 1] = {}
+                self.hash[#self.hash + 1] = {}
             end
-
-            self.data.fiftyMoveCount = self.data.fiftyMoveCount + 1
 
             -- If current side is white black just moved
             if self.data.side == WHITE then self.data.fullMoves = self.data.fullMoves + 1 end
 
-            table.insert(self.data.hash[#self.data.hash], get_hash(self))
+            self.data.side = -1 * self.data.side
 
+            table.insert(self.hist, self.data)
+
+            table.insert(self.hash[#self.hash], get_hash(self))
+
+            self.data = newdata
             --Wrapping the return in a do while so that lua doesn't scream
             do return true end
 
@@ -498,9 +506,9 @@ local Board = {
 
     --Returns the number of times that the current position has been repeated
     reps = function(self)
-        local curHash = self.data.hash[#self.data.hash][#self.data.hash[#self.data.hash]]
+        local curHash = self.hash[#self.hash][#self.hash[#self.hash]]
         local count = 0
-        for i, hash in ipairs(self.data.hash[#self.data.hash]) do
+        for i, hash in ipairs(self.hash[#self.hash]) do
             if hash == curHash then count = count + 1 end
         end
         return count

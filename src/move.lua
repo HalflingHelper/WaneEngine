@@ -8,13 +8,8 @@
     epSq - the enPassant flag before the move is made
     promo - the value of piece promoted to
 ]]
-function move(from, to, castle, captured, epSq, promo)
-    local m = { from = from, to = to, captured = captured or EMPTY, epSq = epSq or -1, promo = promo or EMPTY}
-    m.castle = {}
-    if castle then
-        for k, v in pairs(castle) do m.castle[k] = v end
-    end
-    return m
+function move(from, to, captured, promo)
+    return { from = from, to = to, captured = captured or EMPTY, promo = promo or EMPTY}
 end
 
 -- Returns true if two moves are the same!

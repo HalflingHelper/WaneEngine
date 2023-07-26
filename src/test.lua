@@ -34,6 +34,8 @@ end
 
 --Results:
 --  Starting Position
-    --Depth 4: Correct in ~0.793 sec
-    --Depth 5: Correct in ~26.589 sec
-    --Depth 6: Correct in ~567.192 Seconds
+    --Depth 4: Correct in ~1.5 sec
+    --Depth 5: Correct in ~45 sec
+
+-- Kiwipete
+    --Depth 4: Correct in 42.67 sec.
