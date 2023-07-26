@@ -37,9 +37,7 @@ local Board = {
         Valid squares either contain pieces of the opposing side or are targets for EnPassant
     ]]
     checkPawnCaps = function(self, square)
-        return self.pieces[square] ~= INVALID and self.pieces[square] ~= EMPTY and
-            self.colors[square] ~= self.data.side
-            or self.data.ep == square
+        return self.colors[square] == -1 * self.data.side or self.data.ep == square
     end,
 
     --Adds pawn moves to the list
@@ -51,7 +49,7 @@ local Board = {
             end
         else
             if self.colors[to] ~= EMPTY then
-                table.insert(list, 1, move(from, to, self.pieces[to]))                
+                table.insert(list, 1, move(from, to, self.pieces[to]))
             else
                 list[#list + 1] = move(from, to, self.pieces[to])
             end
@@ -77,8 +75,7 @@ local Board = {
                     local rank = getRank(i)
                     local to = i + pawnDist
 
-                    local isPromo = (s == WHITE and rank == 7) or
-                        (s == BLACK and rank == 2)
+                    local isPromo = to < 22 or to > 91
 
                     -- Check pushes
                     if self.pieces[to] == EMPTY then

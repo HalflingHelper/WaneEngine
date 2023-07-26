@@ -26,8 +26,8 @@ init_hash()
 
 Board:init()
 -- Use various FEN testing string here
--- Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-local testDepth = 5
+Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
+local testDepth =2
 local st = os.clock()
 print(perft(Board, testDepth))
 local et = os.clock()
