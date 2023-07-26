@@ -38,4 +38,4 @@ end
     --Depth 5: Correct in ~45 sec
 
 -- Kiwipete
-    --Depth 4: Correct in 42.67 sec.
+    --Depth 4: Correct in 35.737 sec.

@@ -303,7 +303,7 @@ local Board = {
             local newdata = {
                 ep             = -1,    -- En Passant is set to the index of the potential targeted square
                 side           = self.data.side * -1, -- White goes first
-                castle         = { wq = self.data.wq, wk = self.data.wk, bq = self.data.bq, bk = self.data.bk },
+                castle         = { wq = self.data.castle.wq, wk = self.data.castle.wk, bq = self.data.castle.bq, bk = self.data.castle.bk },
                 fiftyMoveCount = self.data.fiftyMoveCount,
                 fullMoves      = self.data.fullMoves,
             }

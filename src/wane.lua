@@ -27,7 +27,7 @@ init_hash()
 Board:init()
 -- Use various FEN testing string here
 Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-local testDepth =2
+local testDepth = 4
 local st = os.clock()
 print(perft(Board, testDepth))
 local et = os.clock()
@@ -51,7 +51,7 @@ while true do
 
     if side == comp_side then
         --No functionality for search timeout
-        alpha, m = searchRoot(Board)--search(Board, -100000, 10000000, 5, false)--searchRoot(Board)
+        alpha, m = searchRoot(Board)
         alpha = side*alpha
         print("Eval", alpha)
     else
