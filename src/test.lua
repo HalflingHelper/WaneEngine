@@ -16,12 +16,11 @@ function perft(board, depth, printDepth)
     local moves = board:genMoves()
 
     for i, move in ipairs(moves) do
-        if board:makeMove(move) then
-            if not board:inCheck() then
-                local add =  perft(board, depth - 1, printDepth)
-                nodes = nodes + add
-                if depth == printDepth then print(moveToLAN(move), add) end
-            end
+        if board:makeLegalMove(move) then
+            local add = perft(board, depth - 1, printDepth)
+            nodes = nodes + add
+            --if depth == printDepth then print(moveToLAN(move), add) end
+            
             -- undo the move
             board:takebackMove(move)
             --Reset the move list to what it was before the move
@@ -34,8 +33,8 @@ end
 
 --Results:
 --  Starting Position
-    --Depth 4: Correct in ~1.5 sec
-    --Depth 5: Correct in ~45 sec
+--Depth 4: Correct in ~1.5 sec
+--Depth 5: Correct in ~45 sec
 
 -- Kiwipete
-    --Depth 4: Correct in 35.737 sec.
+--Depth 4: Correct in 35.737 sec.

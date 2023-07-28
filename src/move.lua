@@ -2,10 +2,8 @@
 
 --[[
     Returns a move!
-    from, to - Indexes of the square the piece is moving from to the square the piece is moving to
-    castle - the state of the castle flags before the move is made
+    from, to - Indices of the square the piece is moving from to the square the piece is moving to
     captured - the id of the captured piece
-    epSq - the enPassant flag before the move is made
     promo - the value of piece promoted to
 ]]
 function move(from, to, captured, promo)
