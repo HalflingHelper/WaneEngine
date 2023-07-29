@@ -23,17 +23,14 @@ init_hash()
 
 Board:init()
 -- Use various FEN testing string here
--- Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-local testDepth = 5
-local st = os.clock()
-print(perft(Board, testDepth))
-local et = os.clock()
-print("Perft benchmark for depth " .. testDepth .. ": " .. et - st)
+--Board:fromFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
+local testDepth = 6
+--local st = os.clock()
+--print(perft(Board, testDepth))
+--local et = os.clock()
+--print("Perft benchmark for depth " .. testDepth .. ": " .. et - st)
 
--- local st = os.clock()
--- print(search(Board, -100000, 100000, testDepth, true))
--- local et = os.clock()
--- print("Search benchmark for depth " .. testDepth .. ": " .. et - st)
+testSearch(Board, testDepth)
 
 --Setting up player information.
 local comp_side = WHITE

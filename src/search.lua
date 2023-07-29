@@ -7,6 +7,11 @@
 local start
 local nodes
 local MAX_SEARCH_TIME = 4
+
+-- Transposition table
+-- Stuff is stored in the form [zobrist] = {alpha, depth}
+local transposition = {}
+
 --[[ SearchRoot Function
     Searches the root node and returns the evaluation and the best move
     TODO: Iterative deepening
@@ -17,9 +22,10 @@ function searchRoot(board, debug)
 
     local alpha, best
 
-    for i = 1, 100 do
+    for i = 1, 1000 do
         local val, b = negamax(board, -math.huge, math.huge, i)
         if val == 'a' then
+            print("Search stopped at depth " .. i)
             return alpha, best
         end
         alpha, best = val, b
@@ -43,14 +49,27 @@ function negamax(board, alpha, beta, depth, debug)
 
     for i, move in ipairs(moveList) do
         if board:makeLegalMove(move) then
-            local score = negamax(board, -beta, -alpha, depth - 1, debug)
+
+            --First check the transposition table
+            local key = get_hash(board)
+            local past = transposition[key]
+            local score
+
+            if past and past[2] >= depth then
+                score = past[1]
+            else
+                score = negamax(board, -beta, -alpha, depth - 1, debug)
+            end
+
             --Reset the move list to what it was before the move
             board:takebackMove(move)
             board.moveList = moveList
            
             if score == 'a' then return score, nil end
-            score = -score
 
+            transposition[key] = {score, depth}
+
+            score = -score
 
             if score >= beta then
                 return beta
@@ -70,4 +89,26 @@ function negamax(board, alpha, beta, depth, debug)
     if debug and best then printMove(best) end
 
     return alpha, best
+end
+
+--[[
+    Runs the search function at the sepcified depth, disregarding timeouts and stuff like that.
+
+    Results:
+
+    Starting Position
+        Depth 5: 1.33
+        Depth 6: 10.44, 9.465, 5.889
+    Kiwipete
+        Depth 6: 6.071
+]]
+function testSearch(board, depth)
+    nodes = 0
+    start = math.huge --So the search never times out
+
+    st = os.clock()
+    negamax(board, -100000, 100000, depth)
+
+    et = os.clock()
+    print("Search benchmark for depth " .. depth .. ": " .. et - st)
 end
