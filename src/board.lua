@@ -157,7 +157,7 @@ local Board = {
         end
 
         self.moveList = list
-
+    
         return list
     end,
     --[[
@@ -296,10 +296,14 @@ local Board = {
         for i, v in ipairs(self.moveList) do
             if moveEqual(v, move) then
                 local newdata = {
-                    ep             = -1,              -- En Passant is set to the index of the potential targeted square
+                    ep             = -1,                  -- En Passant is set to the index of the potential targeted square
                     side           = self.data.side * -1, -- White goes first
-                    castle         = { wq = self.data.castle.wq, wk = self.data.castle.wk, bq = self.data.castle.bq,
-                        bk = self.data.castle.bk },
+                    castle         = {
+                        wq = self.data.castle.wq,
+                        wk = self.data.castle.wk,
+                        bq = self.data.castle.bq,
+                        bk = self.data.castle.bk
+                    },
                     fiftyMoveCount = self.data.fiftyMoveCount,
                     fullMoves      = self.data.fullMoves,
                 }
@@ -440,14 +444,15 @@ local Board = {
     eval = function(self)
         local materialCount = 0
         local centerScore = 0
+        local mobilityWhite, mobilityBlack
+        local mobilityWt = 0.1
 
-        local pawnScore = 0
         for i, p in ipairs(self.pieces) do
             if p ~= EMPTY and p ~= INVALID then
                 materialCount = materialCount + pieceValue[p] * self.colors[i]
             end
         end
-
+        --[[
         --Control over central squares, where pawns are weighted higher
         for i, v in ipairs({ 55, 56, 65, 66 }) do
             --Pawns in the center
@@ -455,8 +460,21 @@ local Board = {
                 centerScore = centerScore + self.colors[v] * 200
             end
         end
+]]
 
-        return materialCount + centerScore
+        if self.data.side == WHITE then
+            mobilityWhite = #self:genMoves()
+            self.data.side = -self.data.side
+            mobilityBlack = #self:genMoves()
+            self.data.side = -self.data.side
+        else
+            mobilityBlack = #self:genMoves()
+            self.data.side = -self.data.side
+            mobilityWhite = #self:genMoves()
+            self.data.side = -self.data.side
+        end
+
+        return materialCount + centerScore + mobilityWt * (mobilityWhite - mobilityBlack)
     end,
     --[[
         Makes the listed move on the board

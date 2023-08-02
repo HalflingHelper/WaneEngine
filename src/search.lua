@@ -14,7 +14,6 @@ local transposition = {}
 
 --[[ SearchRoot Function
     Searches the root node and returns the evaluation and the best move
-    TODO: Iterative deepening
 ]]
 function searchRoot(board, debug)
     start = os.clock()
@@ -57,6 +56,7 @@ function negamax(board, alpha, beta, depth, debug)
 
             if past and past[2] >= depth then
                 score = past[1]
+                if past[2] % 2 ~= depth % 2 then score = -score end
             else
                 score = negamax(board, -beta, -alpha, depth - 1, debug)
             end
@@ -98,7 +98,7 @@ end
 
     Starting Position
         Depth 5: 1.33
-        Depth 6: 10.44, 9.465, 5.889
+        Depth 6: 10.44, 9.465
     Kiwipete
         Depth 6: 6.071
 ]]
@@ -107,8 +107,9 @@ function testSearch(board, depth)
     start = math.huge --So the search never times out
 
     st = os.clock()
-    negamax(board, -100000, 100000, depth)
+    local alpha, move = negamax(board, -100000, 100000, depth)
 
     et = os.clock()
     print("Search benchmark for depth " .. depth .. ": " .. et - st)
+    printMove(move)
 end
