@@ -1,3 +1,5 @@
+package.path = "./WaneEngine/src/?.lua;"..package.path
+
 --The engine's core board representation, using a 10x12 board, and partially inspired by TSCP engine
 require 'util'
 require 'data'
@@ -672,7 +674,9 @@ local Board = {
         end
 
         io.write('\n\n    a b c d e f g h\n')
-    end
+    end,
+    --
+
 }
 
 return Board

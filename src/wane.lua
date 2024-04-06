@@ -30,14 +30,15 @@ local testDepth = 6
 --local et = os.clock()
 --print("Perft benchmark for depth " .. testDepth .. ": " .. et - st)
 
-testSearch(Board, testDepth)
+--testSearch(Board, testDepth)
 
 --Setting up player information.
-local comp_side = WHITE
+local comp_side = BLACK
 local side = WHITE
 
 -- Core loop of the engine
 while true do
+    print("A")
     Board:genMoves()
     Board:checkResult()
 

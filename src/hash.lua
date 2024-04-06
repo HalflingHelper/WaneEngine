@@ -6,6 +6,23 @@ local hashEp = {} --Unique
 
 local HASH_MAX = 2 ^ 60
 
+
+local function BitXOR(a,b)--Bitwise xor
+    local p,c=1,0
+    while a>0 and b>0 do
+        local ra,rb=a%2,b%2
+        if ra~=rb then c=c+p end
+        a,b,p=(a-ra)/2,(b-rb)/2,p*2
+    end
+    if a<b then a=b end
+    while a>0 do
+        local ra=a%2
+        if ra>0 then c=c+p end
+        a,p=(a-ra)/2,p*2
+    end
+    return c
+end
+
 -- TODO: Write my ownn RNG?
 
 local function boardTo64(n)
@@ -44,17 +61,22 @@ function get_hash(board)
         if board.colors[boardIdx] ~= INVALID then
             if board.colors[boardIdx] ~= EMPTY then
                 local colorIdx = math.floor(board.colors[boardIdx] / 2 + 1.5)
-                hash = hash ~ hashPiece[hashIdx][board.pieces[boardIdx]][colorIdx]
+                hash = BitXOR(hash, hashPiece[hashIdx][board.pieces[boardIdx]][colorIdx])
+                --hash = hash ~ hashPiece[hashIdx][board.pieces[boardIdx]][colorIdx]
             end
             hashIdx = hashIdx + 1
         end
     end
     -- Side
-    if board.data.side == BLACK then hash = hash ~ hashSide end
+    if board.data.side == BLACK then 
+        hash = BitXOR(hash, hashSide)
+        --hash = hash ~ hashSide 
+    end
     -- EnPassant
 
     if board.data.ep ~= -1 then
-        hash = hash ~ hashEp[boardTo64(board.data.ep)]
+        hash = BitXOR(hash, hashEp[boardTo64(board.data.ep)])
+        --hash = hash ~ hashEp[boardTo64(board.data.ep)]
     end
     -- Castling rights
     local castleIdx = 1
