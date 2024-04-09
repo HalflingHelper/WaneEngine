@@ -33,12 +33,11 @@ local testDepth = 6
 --testSearch(Board, testDepth)
 
 --Setting up player information.
-local comp_side = BLACK
+local comp_side = WHITE
 local side = WHITE
 
 -- Core loop of the engine
 while true do
-    print("A")
     Board:genMoves()
     Board:checkResult()
 

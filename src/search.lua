@@ -2,11 +2,14 @@
 -- https://en.wikipedia.org/wiki/Negamax
 
 --TODO: Quiescence instead of just calling the eval function
+package.path = "./WaneEngine/src/?.lua;"..package.path
+
+local eval = require 'eval'
 
 -- Variables for tracking search timing
 local start
 local nodes
-local MAX_SEARCH_TIME = 4
+local MAX_SEARCH_TIME = 1
 
 -- Transposition table
 -- Stuff is stored in the form [zobrist] = {alpha, depth}
@@ -41,7 +44,7 @@ end
     If debug is true, then prints the line
 ]]
 function negamax(board, alpha, beta, depth, debug)
-    if depth == 0 then return board.data.side * board:eval() end
+    if depth == 0 then return board.data.side * eval(board) end
 
     local moveList = board:genMoves()
     local best = nil

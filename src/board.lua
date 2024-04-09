@@ -441,44 +441,6 @@ local Board = {
         return false
     end,
     --[[
-        Evaluates the position on the board
-    ]]
-    eval = function(self)
-        local materialCount = 0
-        local centerScore = 0
-        local mobilityWhite, mobilityBlack
-        local mobilityWt = 0.1
-
-        for i, p in ipairs(self.pieces) do
-            if p ~= EMPTY and p ~= INVALID then
-                materialCount = materialCount + pieceValue[p] * self.colors[i]
-            end
-        end
-        --[[
-        --Control over central squares, where pawns are weighted higher
-        for i, v in ipairs({ 55, 56, 65, 66 }) do
-            --Pawns in the center
-            if self.pieces[v] == PAWN then
-                centerScore = centerScore + self.colors[v] * 200
-            end
-        end
-]]
-
-        if self.data.side == WHITE then
-            mobilityWhite = #self:genMoves()
-            self.data.side = -self.data.side
-            mobilityBlack = #self:genMoves()
-            self.data.side = -self.data.side
-        else
-            mobilityBlack = #self:genMoves()
-            self.data.side = -self.data.side
-            mobilityWhite = #self:genMoves()
-            self.data.side = -self.data.side
-        end
-
-        return materialCount + centerScore + mobilityWt * (mobilityWhite - mobilityBlack)
-    end,
-    --[[
         Makes the listed move on the board
         If the move is illegal, it undoes whatever it did and returns false. Otherwise, it returns true.
     ]]
